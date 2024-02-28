@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useProducts } from "@/context/ProductsContextProvider";
+import { fetchGetProductsEachPage } from "@/lib/action";
 import Card from "@/components/Card";
 import PaginationBar from "@/components/PaginationBar";
-import { fetchGetProductsEachPage } from "@/lib/action";
-import { useContext, useEffect, useState } from "react";
-import { useProducts } from "@/context/ProductsContextProvider";
+import Link from "next/link";
 
 type Product = {
   id: number;
@@ -27,11 +28,12 @@ type Products = {
   limit: number;
 };
 
-const AllProducts = () => {
+const ProductsList = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const { productsData, setproductsData } = useProducts();
   const [maxPage, setMaxPage] = useState<number>(0);
 
+  // ดึงข้อมูลสินค้ารอบแรก
   const fetchData = async () => {
     const tempProductsData: Products = await fetchGetProductsEachPage(0);
     setproductsData(tempProductsData);
@@ -43,45 +45,48 @@ const AllProducts = () => {
     fetchData();
   }, []);
 
+  // destructuring
   const { products, total } = productsData;
 
   return (
     <div className="border-2 border-black w-full sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] min-h-[800px] m-auto bg-gray-100 ">
       <div>
-        <p>Product May you like it!</p>
+        {/* รายการสินค้าหน้าแรก */}
+        <h1>Product May you like it!</h1>
         {loading ? (
           <div>Loading...</div>
         ) : (
           <div>
-            <PaginationBar {...{ total, maxPage }} />
             <div className="flex justify-evenly items-center">
               <ul className="grid grid-cols-4 gap-12">
                 {products.map((product: Product) => (
                   <li key={product.id}>
-                    <Card
-                      id={product.id}
-                      title={product.title}
-                      description={product.description}
-                      price={product.price}
-                      discountPercentage={product.discountPercentage}
-                      rating={product.rating}
-                      stock={product.stock}
-                      brand={product.brand}
-                      category={product.category}
-                      thumbnail={product.thumbnail}
-                      images={product.images}
-                    />
+                    <Link href={`/products/${product.id}`}>
+                      <Card
+                        id={product.id}
+                        title={product.title}
+                        description={product.description}
+                        price={product.price}
+                        discountPercentage={product.discountPercentage}
+                        rating={product.rating}
+                        stock={product.stock}
+                        brand={product.brand}
+                        category={product.category}
+                        thumbnail={product.thumbnail}
+                        images={product.images}
+                      />
+                    </Link>
                   </li>
                 ))}
               </ul>
             </div>
+            {/* แทบเลือกหน้ารายการสินค้า */}
+            <PaginationBar {...{ total, maxPage }} />
           </div>
         )}
-
-        <p>Total product(s): {total}</p>
       </div>
     </div>
   );
 };
 
-export default AllProducts;
+export default ProductsList;

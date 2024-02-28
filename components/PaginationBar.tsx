@@ -3,7 +3,7 @@
 import { useProducts } from "@/context/ProductsContextProvider";
 import { fetchGetProductsEachPage } from "@/lib/action";
 import React, { useEffect, useState } from "react";
-import { SlArrowLeft, SlArrowRight } from "react-icons/sl";
+import { FaAngleLeft , FaAngleRight } from "react-icons/fa6";
 
 type Props = {
   total: number;
@@ -64,7 +64,7 @@ const PaginationBar = ({ total, maxPage }: Props) => {
   return (
     <div className="flex flex-row justify-center items-center">
       <div onClick={() => handleChangePage(currPage - 1)}>
-        <SlArrowLeft
+        <FaAngleLeft
           className={`border-2 w-[30px] h-[30px] p-1 rounded-md cursor-pointer ${
             currPage === 1
               ? "fill-gray-500 border-gray-500"
@@ -91,7 +91,7 @@ const PaginationBar = ({ total, maxPage }: Props) => {
             ))}
       </div>
       <div onClick={() => handleChangePage(currPage + 1)}>
-        <SlArrowRight
+        <FaAngleRight
           className={`border-2 w-[30px] h-[30px] p-1 rounded-md cursor-pointer ${
             currPage === maxPage
               ? "fill-gray-500 border-gray-500"

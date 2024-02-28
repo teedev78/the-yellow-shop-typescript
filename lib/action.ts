@@ -19,3 +19,14 @@ export const fetchGetProductsEachPage = async (skip: number) => {
     console.log(error);
   }
 };
+
+export const fetchGetProduct = async (id: string) => {
+  try {
+    const products = await fetch(`https://dummyjson.com/products/${id}`).then((res) =>
+      res.json()
+    );
+    return products;
+  } catch (error) {
+    console.log(error);
+  }
+};
