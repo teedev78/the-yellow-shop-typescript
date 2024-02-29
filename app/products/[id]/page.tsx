@@ -29,49 +29,32 @@ type Product = {
 };
 
 const route = ({ params }: { params: { id: string } }) => {
-  // const [product, setProduct] = useState<Product>({
-  //   id: 0,
-  //   title: "",
-  //   description: "",
-  //   price: 0,
-  //   discountPercentage: 0,
-  //   rating: 0,
-  //   stock: 0,
-  //   brand: "",
-  //   category: "",
-  //   thumbnail: "",
-  //   images: [],
-  // });
-
   const [product, setProduct] = useState<Product>({
-    id: 1,
-    title: "iPhone 9",
-    description: "An apple mobile which is nothing like apple",
-    price: 549,
-    discountPercentage: 12.96,
-    rating: 4.69,
-    stock: 94,
-    brand: "Apple",
-    category: "smartphones",
-    thumbnail: "https://cdn.dummyjson.com/product-images/1/thumbnail.jpg",
-    images: [
-      "https://cdn.dummyjson.com/product-images/1/1.jpg",
-      "https://cdn.dummyjson.com/product-images/1/2.jpg",
-      "https://cdn.dummyjson.com/product-images/1/3.jpg",
-      "https://cdn.dummyjson.com/product-images/1/4.jpg",
-      "https://cdn.dummyjson.com/product-images/1/thumbnail.jpg",
-      "https://cdn.dummyjson.com/product-images/1/2.jpg",
-      "https://cdn.dummyjson.com/product-images/1/4.jpg",
-    ],
+    id: 0,
+    title: "",
+    description: "",
+    price: 0,
+    discountPercentage: 0,
+    rating: 0,
+    stock: 0,
+    brand: "",
+    category: "",
+    thumbnail: "",
+    images: ["/images/no-image.jpg"],
   });
 
   const [loading, setLoading] = useState<boolean>(true);
   const [quantity, setQuantity] = useState<number>(1);
+  const [mainImg, setMainImg] = useState<number>(0);
   const [imgIndex, setImgIndex] = useState<number[]>([0, 4]);
 
   const fetchProduct = async (id: string) => {
     const data = await fetchGetProduct(id);
     setProduct(data);
+  };
+
+  const handlerChangeMainImage = (index: number) => {
+    setMainImg(index);
   };
 
   const handlerImagesSlide = (slide: string) => {
@@ -84,69 +67,124 @@ const route = ({ params }: { params: { id: string } }) => {
     }
   };
 
+  const handlerQuantity = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const num = Number(e.target.value.replace(/\D/g, ""));
+    if (num === 0) {
+      setQuantity(1);
+    } else if (num > product.stock) {
+      setQuantity(product.stock);
+    } else {
+      setQuantity(num);
+    }
+  };
+
+  const handlerChangeQuantity = (qty: string) => {
+    if (qty === "plus" && quantity < product.stock) {
+      setQuantity(quantity + 1);
+    } else if (qty === "minus" && quantity > 1) {
+      setQuantity(quantity - 1);
+    } else {
+      return;
+    }
+  };
+
+  const testH = (value: number) => {
+    setMainImg(value);
+    console.log("Slide no."+value+" & index of main image:"+mainImg);
+  };
+
   useEffect(() => {
-    // fetchProduct(params.id);
+    fetchProduct(params.id);
     setLoading(false);
-  }, [imgIndex]);
+  }, [imgIndex, mainImg]);
 
   return (
-    <section className="border-2 border-black w-full sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] min-h-[400px] m-auto bg-white">
+    <section className="border-2 border-black w-full sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] h-full m-auto bg-white md:p-5">
       {loading ? (
         <div>loading...</div>
       ) : (
-        <div className="flex flex-row justify-between items-center p-5">
-          <div className="flex flex-col justify-between items-center border-2 border-blue-400 w-1/2 h-[500px]">
-            <div className="flex justify-center items-center h-[400px] w-[460px] border-2 border-orange-500">
+        <div className="flex flex-col md:flex-row justify-between items-start pb-5 border-b-2 border-gray-400">
+          {/* Product Image */}
+          <div className="flex flex-col justify-start items-center w-full md:w-1/2">
+            <div className="flex justify-center items-center w-full aspect-square">
               <Image
-                src={product.thumbnail}
+                src={product.images[mainImg]}
                 alt={product.title}
-                width={400}
-                height={400}
-                className="border-2 border-red-500"
+                width="0"
+                height="0"
+                sizes="100vw"
+                className="w-full h-auto aspect-square object-contain"
               />
             </div>
-
-            <div className="flex flex-row justify-center items-center">
-              <div className="flex justify-center items-center border-2 border-gray-500 w-[24px] h-[80px]">
-                <FaAngleLeft
-                  onClick={() => handlerImagesSlide("left")}
-                  className="fill-gray-600"
-                />
-              </div>
-              <ul className="flex flex-row justify-center items-center">
-                {Array(5)
-                  .fill(null)
-                  .map((_, index) => (
-                    // <li key={index} className="mx-1">
-                    //   <Image
-                    //     src={image}
-                    //     alt={product.title}
-                    //     width={80}
-                    //     height={80}
-                    //   />
-                    // </li>
+            <div className="w-full">
+              {product.images.length > 5 ? (
+                <ul className="flex flex-row justify-center items-center">
+                  <div
+                    onClick={() => handlerImagesSlide("left")}
+                    className="flex justify-center items-center border-2 border-gray-500 w-[5%] h-[100px] cursor-pointer"
+                  >
+                    <FaAngleLeft className="fill-gray-600" />
+                  </div>
+                  {Array(5)
+                    .fill(null)
+                    .map((_, index) => (
+                      <li
+                        key={index}
+                        onClick={() => setMainImg(index + imgIndex[0])}
+                        className={
+                          mainImg === index + imgIndex[0]
+                            ? "border-blue-400"
+                            : "border-gray-100" +
+                              `flex justify-center items-center border-2  w-[18%] aspect-square cursor-pointer`
+                        }
+                      >
+                        <Image
+                          src={product.images[index + imgIndex[0]]}
+                          alt={product.title}
+                          width="0"
+                          height="0"
+                          sizes="100vw"
+                          className="w-full h-auto aspect-square object-contain"
+                        />
+                      </li>
+                    ))}
+                  <div
+                    onClick={() => handlerImagesSlide("right")}
+                    className="flex justify-center items-center border-2 border-gray-500 w-[5%] h-[100px] cursor-pointer"
+                  >
+                    <FaAngleRight className="fill-gray-600" />
+                  </div>
+                </ul>
+              ) : (
+                <ul className="flex flex-row justify-center items-center">
+                  {product.images.map((image, index) => (
                     <li
                       key={index}
-                      className="border-2 border-green-400 w-[80px] h-[80px]"
+                      onClick={() => testH(index + imgIndex[0])}
+                      className={
+                        mainImg === index + imgIndex[0]
+                          ? "border-blue-400" +
+                            `flex justify-center items-center border-2 w-[18%] aspect-square cursor-pointer`
+                          : "border-gray-100" +
+                            `flex justify-center items-center border-2 w-[18%] aspect-square cursor-pointer`
+                      }
                     >
                       <Image
-                        src={product.images[index + imgIndex[0]]}
+                        src={image}
                         alt={product.title}
-                        width={80}
-                        height={80}
+                        width="0"
+                        height="0"
+                        sizes="100vw"
+                        className="w-full h-auto aspect-square object-contain"
                       />
                     </li>
                   ))}
-              </ul>
-              <div className="flex justify-center items-center border-2 border-gray-500 w-[24px] h-[80px]">
-                <FaAngleRight
-                  onClick={() => handlerImagesSlide("right")}
-                  className="fill-gray-600"
-                />
-              </div>
+                </ul>
+              )}
             </div>
           </div>
-          <div className="flex flex-col justify-start items-start border-b-2 border-gray-400 w-1/2 h-[500px] p-5">
+          {/* Product Details */}
+          <div className="flex flex-col justify-start items-start w-full md:w-1/2 p-5 md:px-5 md:py-0">
             <h1 className="font-medium text-2xl">{product.title}</h1>
             <div className="flex flex-row justify-start items-center">
               <span className="text-blue-500">{product.rating}</span>
@@ -166,11 +204,22 @@ const route = ({ params }: { params: { id: string } }) => {
               </span>
             </div>
             <div className="flex flex-row justify-center items-center mt-10">
-              <FaMinus className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1" />
+              <FaMinus
+                onClick={() => handlerChangeQuantity("minus")}
+                className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
+              />
               <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
-                {quantity}
+                <input
+                  type="text"
+                  value={quantity}
+                  onChange={handlerQuantity}
+                  className="w-full text-center"
+                />
               </span>
-              <FaPlus className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1" />
+              <FaPlus
+                onClick={() => handlerChangeQuantity("plus")}
+                className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
+              />
               <span className="ml-3">{product.stock} in stock</span>
             </div>
             <div className="mt-10">
