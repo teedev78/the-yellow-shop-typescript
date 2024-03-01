@@ -55,6 +55,8 @@ const route = ({ params }: { params: { id: string } }) => {
 
   const handlerChangeMainImage = (index: number) => {
     setMainImg(index);
+    console.log(index+" "+mainImg);
+    
   };
 
   const handlerImagesSlide = (slide: string) => {
@@ -88,15 +90,10 @@ const route = ({ params }: { params: { id: string } }) => {
     }
   };
 
-  const testH = (value: number) => {
-    setMainImg(value);
-    console.log("Slide no."+value+" & index of main image:"+mainImg);
-  };
-
   useEffect(() => {
     fetchProduct(params.id);
     setLoading(false);
-  }, [imgIndex, mainImg]);
+  }, [imgIndex]);
 
   return (
     <section className="border-2 border-black w-full sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] h-full m-auto bg-white md:p-5">
@@ -133,9 +130,10 @@ const route = ({ params }: { params: { id: string } }) => {
                         onClick={() => setMainImg(index + imgIndex[0])}
                         className={
                           mainImg === index + imgIndex[0]
-                            ? "border-blue-400"
-                            : "border-gray-100" +
-                              `flex justify-center items-center border-2  w-[18%] aspect-square cursor-pointer`
+                            ? "border-blue-400 " +
+                              `flex justify-center items-center border-2 w-[18%] aspect-square cursor-pointer`
+                            : "border-gray-500 " +
+                              `flex justify-center items-center border-2 w-[18%] aspect-square cursor-pointer`
                         }
                       >
                         <Image
@@ -160,12 +158,12 @@ const route = ({ params }: { params: { id: string } }) => {
                   {product.images.map((image, index) => (
                     <li
                       key={index}
-                      onClick={() => testH(index + imgIndex[0])}
+                      onClick={() => setMainImg(index + imgIndex[0])}
                       className={
                         mainImg === index + imgIndex[0]
-                          ? "border-blue-400" +
+                          ? "border-blue-400 " +
                             `flex justify-center items-center border-2 w-[18%] aspect-square cursor-pointer`
-                          : "border-gray-100" +
+                          : "border-gray-500 " +
                             `flex justify-center items-center border-2 w-[18%] aspect-square cursor-pointer`
                       }
                     >
