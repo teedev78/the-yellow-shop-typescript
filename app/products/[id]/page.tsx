@@ -53,12 +53,6 @@ const route = ({ params }: { params: { id: string } }) => {
     setProduct(data);
   };
 
-  const handlerChangeMainImage = (index: number) => {
-    setMainImg(index);
-    console.log(index+" "+mainImg);
-    
-  };
-
   const handlerImagesSlide = (slide: string) => {
     if (slide === "left" && imgIndex[0] !== 0) {
       setImgIndex(imgIndex.map((i) => i - 1));

@@ -81,7 +81,9 @@ const ProductsList = () => {
               </ul>
             </div>
             {/* แทบเลือกหน้ารายการสินค้า */}
-            <PaginationBar {...{ total, maxPage }} />
+            <div className="p-10">
+              <PaginationBar {...{ total, maxPage }} />
+            </div>
           </div>
         )}
       </div>

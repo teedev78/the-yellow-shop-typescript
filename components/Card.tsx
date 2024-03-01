@@ -30,19 +30,19 @@ const Card = ({
   };
 
   return (
-    <div className="flex flex-col justify-between items-center hover:border-2 border-black w-[160px] h-[240px] bg-white overflow-hidden">
-      <div className="flex justify-center items-center w-[160px] h-[160px] relative">
+    <div className="flex flex-col justify-between items-center hover:border-2 border-black w-[160px] h-[280px] bg-white overflow-hidden">
+      <div className="flex justify-center items-center w-[160px] h-[160px]">
         <Image
           src={thumbnail}
-          fill
           alt={title}
-          priority
-          sizes="(max-width: 160px) (max-width: 160px)"
-          className="object-contain"
+          width="0"
+          height="0"
+          sizes="100vw"
+          className="w-full h-auto aspect-square object-contain"
         />
       </div>
-      <div className="w-full p-1 text-left text-sm font-medium">{title}</div>
-      <div className="w-full px-1 py-3 text-right font-medium">
+      <div className="w-full p-1 text-left text-sm font-medium h-[100px] overflow-hidden">{title}</div>
+      <div className="w-full p-1 text-right text-sm font-medium">
         $
         {discountPercentage > 0
           ? (price * (discountPercentage / 100)).toFixed(2)
