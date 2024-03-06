@@ -35,13 +35,13 @@ const PaginationBar = ({ total, maxPage }: Props) => {
   const [currPage, setCurrPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const { setproductsData } = useProducts();
+  const { setProductsData } = useProducts();
 
   const fetchData = async (page: number) => {
     const tempProductsData: Products = await fetchGetProductsEachPage(
       (page - 1) * 12
     );
-    setproductsData(tempProductsData);
+    setProductsData(tempProductsData);
   };
 
   useEffect(() => {

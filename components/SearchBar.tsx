@@ -1,7 +1,5 @@
-import { useProducts } from "@/context/ProductsContextProvider";
-import { fetchSearchProduct } from "@/lib/action";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 
 type Product = {
@@ -27,23 +25,12 @@ type Products = {
 
 const SearchBar = () => {
   const router = useRouter();
-  const { productsData, setproductsData } = useProducts();
   const [value, setValue] = useState<string>("");
 
   const fetchProducts = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(productsData);
-    const result: Products = await fetchSearchProduct(value);
-    console.log(result);
-    console.log(productsData);
-    setproductsData(result);
-    console.log(productsData);
-    // router.push("/search-result");
+    router.push("/search-result?search=" + value);
   };
-
-  useEffect(() => {
-    console.log("search successful");
-  }, [productsData]);
 
   return (
     <form
@@ -54,10 +41,10 @@ const SearchBar = () => {
         type="text"
         placeholder="search"
         onChange={(e) => setValue(e.target.value)}
-        className="border-2 border-white outline-none focus:border-black w-2/3 h-8 p-1 rounded-l-sm"
+        className="border-2 border-white outline-none focus:border-black w-full sm:w-2/3 h-8 p-1 rounded-l-sm"
       />
       <button type="submit">
-        <FaMagnifyingGlass className="fill-white border-2 border-white p-1 w-8 h-8 rounded-r-sm cursor-pointer" />
+        <FaMagnifyingGlass className="fill-black sm:fill-white border-2 border-white p-1 w-8 h-8 rounded-r-sm cursor-pointer" />
       </button>
     </form>
   );

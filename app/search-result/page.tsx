@@ -1,9 +1,11 @@
 "use client";
 
-import Card from "@/components/Card";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useProducts } from "@/context/ProductsContextProvider";
+import { fetchSearchProduct } from "@/lib/action";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import Card from "@/components/Card";
 
 type Product = {
   id: number;
@@ -27,23 +29,54 @@ type Products = {
 };
 
 const SearchResult = () => {
-  const { productsData } = useProducts();
-  console.log(productsData);
-  
-  
+  const searchParams = useSearchParams();
+  const search = searchParams.get("search") as string;
 
-  useEffect(()=>{
-    console.log("searched");
-  },[]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { productsData, setProductsData } = useProducts();
+
+  const fetchProducts = async () => {
+    const result = await fetchSearchProduct(search);
+    setProductsData(result);
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    setLoading(false);
+  }, [search]);
 
   return (
-    <div>
-      {/* <div className="flex justify-evenly items-center">
-        {products.map(product => (
-          <p key={product.id}>{product.title}</p>
-        ))}
-      </div> */}
-    </div>
+    <main className="bg-gray-100 sm:py-5">
+      <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] w-full m-auto bg-white md:p-5">
+        {loading ? (
+          <div>loading...</div>
+        ) : (
+          <div className="flex justify-evenly items-center">
+            <ul className="grid grid-cols-4 gap-12">
+              {productsData.products.map((product) => (
+                <li key={product.id}>
+                  <Link href={`/products/${product.id}`}>
+                    <Card
+                      id={product.id}
+                      title={product.title}
+                      description={product.description}
+                      price={product.price}
+                      discountPercentage={product.discountPercentage}
+                      rating={product.rating}
+                      stock={product.stock}
+                      brand={product.brand}
+                      category={product.category}
+                      thumbnail={product.thumbnail}
+                      images={product.images}
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+    </main>
   );
 };
 

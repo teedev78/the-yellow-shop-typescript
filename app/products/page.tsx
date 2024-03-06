@@ -30,13 +30,13 @@ type Products = {
 
 const ProductsList = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const { productsData, setproductsData } = useProducts();
+  const { productsData, setProductsData } = useProducts();
   const [maxPage, setMaxPage] = useState<number>(0);
 
   // ดึงข้อมูลสินค้ารอบแรก
   const fetchData = async () => {
     const tempProductsData: Products = await fetchGetProductsEachPage(0);
-    setproductsData(tempProductsData);
+    setProductsData(tempProductsData);
     setMaxPage(Math.ceil(tempProductsData.total / tempProductsData.limit));
     setLoading(false);
   };
@@ -49,16 +49,15 @@ const ProductsList = () => {
   const { products, total } = productsData;
 
   return (
-    <div className="border-2 border-black w-full sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] min-h-[800px] m-auto bg-gray-100 ">
-      <div>
+    <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">
+      <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] m-auto bg-white">
         {/* รายการสินค้าหน้าแรก */}
-        <h1>Product May you like it!</h1>
         {loading ? (
           <div>Loading...</div>
         ) : (
-          <div>
-            <div className="flex justify-evenly items-center">
-              <ul className="grid grid-cols-4 gap-12">
+          <div className="">
+            <div className="flex flex-col justify-between items-center">
+              <ul className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-12">
                 {products.map((product: Product) => (
                   <li key={product.id}>
                     <Link href={`/products/${product.id}`}>
@@ -86,8 +85,8 @@ const ProductsList = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

@@ -25,7 +25,7 @@ type Products = {
 
 type T = {
   productsData: Products;
-  setproductsData: React.Dispatch<React.SetStateAction<Products>>;
+  setProductsData: React.Dispatch<React.SetStateAction<Products>>;
 };
 
 const productsContextDefaultValues: T = {
@@ -35,7 +35,7 @@ const productsContextDefaultValues: T = {
     skip: 0,
     limit: 0,
   },
-  setproductsData: () => [],
+  setProductsData: () => [],
 };
 
 const ProductsContext = createContext<T>(productsContextDefaultValues);
@@ -49,7 +49,7 @@ const ProductsContextProvider = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const [productsData, setproductsData] = useState<Products>({
+  const [productsData, setProductsData] = useState<Products>({
     products: [],
     total: 0,
     skip: 0,
@@ -57,7 +57,7 @@ const ProductsContextProvider = ({
   });
 
   return (
-    <ProductsContext.Provider value={{ productsData, setproductsData }}>
+    <ProductsContext.Provider value={{ productsData, setProductsData }}>
       {children}
     </ProductsContext.Provider>
   );

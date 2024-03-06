@@ -90,7 +90,8 @@ const route = ({ params }: { params: { id: string } }) => {
   }, [imgIndex]);
 
   return (
-    <section className="border-2 border-black w-full sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] h-full m-auto bg-white md:p-5">
+    <main className="bg-gray-100 sm:py-5">
+    <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] w-full m-auto bg-white md:p-5">
       {loading ? (
         <div>loading...</div>
       ) : (
@@ -228,6 +229,7 @@ const route = ({ params }: { params: { id: string } }) => {
         </div>
       )}
     </section>
+    </main>
   );
 };
 
