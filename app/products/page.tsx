@@ -38,11 +38,11 @@ const ProductsList = () => {
     const tempProductsData: Products = await fetchGetProductsEachPage(0);
     setProductsData(tempProductsData);
     setMaxPage(Math.ceil(tempProductsData.total / tempProductsData.limit));
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchData();
+    setLoading(false);
   }, []);
 
   // destructuring

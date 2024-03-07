@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import React from "react";
 import {
   FaBell,
@@ -10,15 +11,28 @@ import {
   FaSquareXTwitter,
   FaSquareYoutube,
 } from "react-icons/fa6";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 
 const Footer = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const goToHome = () => {
+    if (pathname !== "/") {
+      router.push("/");
+    } else {
+      location.reload();
+    }
+  };
+
   return (
     <div className="w-full bg-blue-500 sm:bg-gradient-to-r from-blue-400 from-10% via-blue-400 via-30% to-blue-500 to-90% p-2">
       {/* Desktop Style */}
       <div className="hidden sm:flex sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] h-[100px] m-auto flex-row justify-between items-center">
-        <div className="w-3/6">
+        <div onClick={() => goToHome()} className="w-3/6">
           <h1 className="text-2xl font-bold text-white cursor-pointer">
-            <Link href="/">Y | The Yellow Shop</Link>
+            Y | The Yellow Shop
           </h1>
         </div>
         <div className="w-2/6">
@@ -71,12 +85,13 @@ const Footer = () => {
       </div>
       {/* Mobile Style */}
       <div className="sm:hidden h-[50px] flex flex-row justify-evenly items-center">
-        <Link href="/">
-          <div className="flex flex-col justify-center items-center cursor-pointer">
-            <FaHouse className="fill-white text-xl" />
-            <p className="text-white text-sm font-light">Home</p>
-          </div>
-        </Link>
+        <div
+          onClick={() => goToHome()}
+          className="flex flex-col justify-center items-center cursor-pointer"
+        >
+          <FaHouse className="fill-white text-xl" />
+          <p className="text-white text-sm font-light">Home</p>
+        </div>
         <Link href="/order-history">
           <div className="flex flex-col justify-center items-center cursor-pointer">
             <FaClipboardList className="fill-white text-xl" />
