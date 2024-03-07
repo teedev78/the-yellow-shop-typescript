@@ -80,7 +80,7 @@ const PaginationBar = ({ total, maxPage }: Props) => {
               <li
                 key={index}
                 onClick={() => handleChangePage(index + 1)}
-                className={`h-[30px] w-[30px] p-2 mx-1 flex justify-center items-center ${
+                className={`h-[30px] w-[30px] p-2 mx-1 flex justify-center items-center cursor-pointer ${
                   index + 1 === currPage
                     ? "bg-blue-500 rounded-md text-white"
                     : "text-gray-600"
