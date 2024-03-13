@@ -1,16 +1,19 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
-import { FaCartShopping } from "react-icons/fa6";
+import CartBar from "./CartBar";
 import SearchBar from "./SearchBar";
 import { useRouter, usePathname } from "next/navigation";
-import { useCart } from "@/context/CartContextProvider";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 
 const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const userImg = "/images/profile-temp-image.jpg";
+  const cart = useSelector((state: RootState) => state.cart);
+  const cartLength = cart.cartItem.length;
 
   const goToHome = () => {
     if (pathname !== "/") {
@@ -29,13 +32,8 @@ const Navbar = () => {
         <div className="w-6/12">
           <SearchBar />
         </div>
-        <div className="w-1/12 relative cursor-pointer">
-          <FaCartShopping className="fill-white w-9 h-9 p-1" />
-          {1 > 0 && (
-            <div className="absolute flex justify-center items-center top-[-5px] right-[-15px] bg-white text-blue-500 border-2 border-blue-200 rounded-full p-2 h-4 text-sm">
-              <p className="">{1}</p>
-            </div>
-          )}
+        <div className="w-1/12 cursor-pointer flex justify-center items-center">
+          <CartBar cartLength={cartLength} />
         </div>
         <div className="w-1/12">
           <Image
@@ -54,12 +52,7 @@ const Navbar = () => {
           <SearchBar />
         </div>
         <div className="w-1/6 relative flex justify-center items-center cursor-pointer">
-          <FaCartShopping className="fill-white w-9 h-9 p-1" />
-          {1 > 0 && (
-            <div className="absolute flex justify-center items-center top-[-5px] right-[-15px] bg-white text-blue-500 border-2 border-blue-200 rounded-full p-2 h-4 text-sm">
-              <p className="">{1}</p>
-            </div>
-          )}
+          <CartBar cartLength={cartLength} />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { fetchGetProduct } from "@/lib/action";
+import { calTotalPrice } from "../../../utilities/calTotalPrice";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,11 +15,10 @@ import {
   FaAngleRight,
 } from "react-icons/fa6";
 
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
-import {
-  increment
-} from "@/store/slices/cartSlice";
+import { useDispatch } from "react-redux";
+import { increment } from "@/store/slices/cartSlice";
 
 type Product = {
   id: number;
@@ -34,27 +34,30 @@ type Product = {
   images: string[];
 };
 
-const route = ({ params }: { params: { id: string } }) => {
-  const [product, setProduct] = useState<Product>({
-    id: 0,
-    title: "",
-    description: "",
-    price: 0,
-    discountPercentage: 0,
-    rating: 0,
-    stock: 0,
-    brand: "",
-    category: "",
-    thumbnail: "",
-    images: ["/images/no-image.jpg"],
-  });
+const initialProductValue = {
+  id: 0,
+  title: "",
+  description: "",
+  price: 0,
+  discountPercentage: 0,
+  rating: 0,
+  stock: 0,
+  brand: "",
+  category: "",
+  thumbnail: "",
+  images: ["/images/no-image.jpg"],
+};
 
+const route = ({ params }: { params: { id: string } }) => {
+  const [product, setProduct] = useState<Product>(initialProductValue);
   const [loading, setLoading] = useState<boolean>(true);
   const [quantity, setQuantity] = useState<number>(1);
   const [mainImg, setMainImg] = useState<number>(0);
   const [imgIndex, setImgIndex] = useState<number[]>([0, 4]);
+  const totalPrice = calTotalPrice(product.price, product.discountPercentage);
 
-  const count = useSelector((state: RootState) => state.cart);
+  const cart = useSelector((state: RootState) => state.cart);
+
   const dispatch = useDispatch();
 
   const fetchProduct = async (id: string) => {
@@ -93,22 +96,22 @@ const route = ({ params }: { params: { id: string } }) => {
     }
   };
 
-  const addToCart = (id: number, thumbnail: string, quantity: number, stock: number) => {
-    // console.log(id);
-    // console.log(thumbnail);
-    // console.log(quantity);
-
-    dispatch(increment({id, thumbnail, quantity, stock}));
+  const addToCart = (
+    id: number,
+    thumbnail: string,
+    title: string,
+    price: number,
+    discountPercentage: number,
+    quantity: number,
+    stock: number
+  ) => {
+    dispatch(increment({ id, thumbnail, title, price, discountPercentage, quantity, stock }));
   };
 
   useEffect(() => {
     fetchProduct(params.id);
     setLoading(false);
   }, []);
-
-  useEffect(() => {
-    console.log(count);
-  }, [count]);
 
   return (
     <main className="bg-gray-100 sm:py-5">
@@ -210,13 +213,7 @@ const route = ({ params }: { params: { id: string } }) => {
                 <span className="line-through">{product.price.toFixed(2)}</span>
               </div>
               <div className="text-blue-500 font-semibold text-2xl">
-                $
-                <span>
-                  {(
-                    product.price *
-                    (1 - product.discountPercentage / 100)
-                  ).toFixed(2)}
-                </span>
+                $<span>{totalPrice}</span>
               </div>
               <div className="flex flex-row justify-center items-center mt-10">
                 <FaMinus
@@ -240,7 +237,15 @@ const route = ({ params }: { params: { id: string } }) => {
               <div className="mt-10">
                 <button
                   onClick={() =>
-                    addToCart(product.id, product.thumbnail, quantity, product.stock)
+                    addToCart(
+                      product.id,
+                      product.thumbnail,
+                      product.title,
+                      product.price,
+                      product.discountPercentage,
+                      quantity,
+                      product.stock
+                    )
                   }
                   className="flex flex-row justify-center items-center w-[200px] h-[36px] bg-blue-500 text-white rounded-sm"
                 >

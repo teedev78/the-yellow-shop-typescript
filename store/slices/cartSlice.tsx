@@ -1,20 +1,27 @@
 "use client";
 
+import { calTotalPrice } from "@/utilities/calTotalPrice";
 import { createSlice } from "@reduxjs/toolkit";
+import { useDispatch } from "react-redux";
 
 type CartItem = {
   product_id: number;
   thumbnail: string;
+  title: string;
+  price: number;
+  discountPrice: number;
   quantity: number;
 };
 
 type Cart = {
   cartItem: CartItem[];
+  total_price: number;
   loading: false;
 };
 
 const initialValue: Cart = {
   cartItem: [],
+  total_price: 0,
   loading: false,
 };
 
@@ -22,17 +29,33 @@ const cartSlice = createSlice({
   name: "cart",
   initialState: initialValue,
   reducers: {
+    countTotalPrice: (state) => {
+      let total_price = 0;
+      state.cartItem.forEach((item) => {
+        total_price += item.discountPrice * item.quantity;
+      });
+      state.total_price = Number(total_price.toFixed(2));
+    },
     increment: (state, action) => {
       // state.value += action.payload;
-      // console.log(action.payload.id);
-      const { id, thumbnail, quantity, stock } = action.payload;
+      const {
+        id,
+        thumbnail,
+        title,
+        price,
+        discountPercentage,
+        quantity,
+        stock,
+      } = action.payload;
 
       const hasItem = state.cartItem.find((item) => item.product_id === id);
-      // console.log(hasItem);
       if (hasItem === undefined) {
         state.cartItem.push({
           product_id: id,
           thumbnail: thumbnail,
+          title: title,
+          price: price,
+          discountPrice: calTotalPrice(price, discountPercentage),
           quantity: quantity,
         });
       } else {
@@ -47,12 +70,24 @@ const cartSlice = createSlice({
           }
         });
       }
-      // console.log(state.cartItem);
+    },
+    remove: (state, action) => {
+      const { id } = action.payload;
+
+      const removeById = (item: CartItem) => {
+        if (item.product_id !== id) {
+          return true;
+        }
+        return false;
+      };
+
+      const newArray = state.cartItem.filter(removeById);
+      state.cartItem = newArray;
     },
   },
   extraReducers: (builder) => {},
 });
 
-export const { increment } = cartSlice.actions;
+export const { countTotalPrice, increment, remove } = cartSlice.actions;
 
 export default cartSlice.reducer;
