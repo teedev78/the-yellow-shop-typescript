@@ -11,6 +11,7 @@ type CartItem = {
   price: number;
   discountPrice: number;
   quantity: number;
+  stock: number;
 };
 
 type Cart = {
@@ -57,6 +58,7 @@ const cartSlice = createSlice({
           price: price,
           discountPrice: calTotalPrice(price, discountPercentage),
           quantity: quantity,
+          stock: stock,
         });
       } else {
         state.cartItem.map((item) => {
@@ -70,6 +72,15 @@ const cartSlice = createSlice({
           }
         });
       }
+    },
+    increaseByQty: (state, action) => {
+      // console.log(action.payload);
+      const { id, quantity } = action.payload;
+      state.cartItem.map((item) => {
+        if (item.product_id === id) {
+          item.quantity = quantity;
+        }
+      });
     },
     remove: (state, action) => {
       const { id } = action.payload;
@@ -88,6 +99,7 @@ const cartSlice = createSlice({
   extraReducers: (builder) => {},
 });
 
-export const { countTotalPrice, increment, remove } = cartSlice.actions;
+export const { countTotalPrice, increment, increaseByQty, remove } =
+  cartSlice.actions;
 
 export default cartSlice.reducer;

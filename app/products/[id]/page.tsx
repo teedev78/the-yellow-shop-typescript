@@ -19,6 +19,8 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { useDispatch } from "react-redux";
 import { increment } from "@/store/slices/cartSlice";
+import Toast from "@/components/Toast";
+import { toggleToast } from "@/store/slices/toastSlice";
 
 type Product = {
   id: number;
@@ -56,7 +58,7 @@ const route = ({ params }: { params: { id: string } }) => {
   const [imgIndex, setImgIndex] = useState<number[]>([0, 4]);
   const totalPrice = calTotalPrice(product.price, product.discountPercentage);
 
-  const cart = useSelector((state: RootState) => state.cart);
+  const toast = useSelector((state: RootState) => state.toast);
 
   const dispatch = useDispatch();
 
@@ -81,18 +83,32 @@ const route = ({ params }: { params: { id: string } }) => {
       setQuantity(1);
     } else if (num > product.stock) {
       setQuantity(product.stock);
+      dispatch(
+        toggleToast({ message: `You can only add ${product.stock} items.` })
+      );
     } else {
       setQuantity(num);
     }
   };
 
-  const handlerChangeQuantity = (qty: string) => {
-    if (qty === "plus" && quantity < product.stock) {
-      setQuantity(quantity + 1);
-    } else if (qty === "minus" && quantity > 1) {
-      setQuantity(quantity - 1);
+  const increaseItem = () => {
+    const num = quantity + 1;
+    if (num > product.stock) {
+      setQuantity(product.stock);
+      dispatch(
+        toggleToast({ message: `You can only add ${product.stock} items.` })
+      );
     } else {
-      return;
+      setQuantity(num);
+    }
+  };
+
+  const decreaseItem = () => {
+    const num = quantity - 1;
+    if (num <= 1) {
+      setQuantity(1);
+    } else {
+      setQuantity(num);
     }
   };
 
@@ -105,7 +121,17 @@ const route = ({ params }: { params: { id: string } }) => {
     quantity: number,
     stock: number
   ) => {
-    dispatch(increment({ id, thumbnail, title, price, discountPercentage, quantity, stock }));
+    dispatch(
+      increment({
+        id,
+        thumbnail,
+        title,
+        price,
+        discountPercentage,
+        quantity,
+        stock,
+      })
+    );
   };
 
   useEffect(() => {
@@ -115,6 +141,7 @@ const route = ({ params }: { params: { id: string } }) => {
 
   return (
     <main className="bg-gray-100 sm:py-5">
+      {toast && <Toast />}
       <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] w-full m-auto bg-white md:p-5">
         {loading ? (
           <div>loading...</div>
@@ -216,22 +243,24 @@ const route = ({ params }: { params: { id: string } }) => {
                 $<span>{totalPrice}</span>
               </div>
               <div className="flex flex-row justify-center items-center mt-10">
-                <FaMinus
-                  onClick={() => handlerChangeQuantity("minus")}
-                  className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
-                />
-                <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
-                  <input
-                    type="text"
-                    value={quantity}
-                    onChange={handlerQuantity}
-                    className="w-full text-center"
+                <div className="flex flex-row justify-center items-center">
+                  <FaMinus
+                    onClick={decreaseItem}
+                    className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
                   />
-                </span>
-                <FaPlus
-                  onClick={() => handlerChangeQuantity("plus")}
-                  className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
-                />
+                  <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
+                    <input
+                      type="text"
+                      value={quantity}
+                      onChange={handlerQuantity}
+                      className="w-full text-center"
+                    />
+                  </span>
+                  <FaPlus
+                    onClick={increaseItem}
+                    className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
+                  />
+                </div>
                 <span className="ml-3">{product.stock} in stock</span>
               </div>
               <div className="mt-10">
