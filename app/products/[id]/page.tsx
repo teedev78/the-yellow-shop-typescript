@@ -140,7 +140,7 @@ const route = ({ params }: { params: { id: string } }) => {
   }, []);
 
   return (
-    <main className="bg-gray-100 sm:py-5">
+    <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">
       {toast && <Toast />}
       <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] w-full m-auto bg-white md:p-5">
         {loading ? (

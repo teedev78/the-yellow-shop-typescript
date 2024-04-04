@@ -7,6 +7,7 @@ import SearchBar from "./SearchBar";
 import { useRouter, usePathname } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
+import Link from "next/link";
 
 const Navbar = () => {
   const router = useRouter();
@@ -36,14 +37,16 @@ const Navbar = () => {
           <CartBar cartLength={cartLength} />
         </div>
         <div className="w-1/12">
-          <Image
-            src={userImg}
-            alt="profile-image"
-            width="0"
-            height="0"
-            sizes="100vw"
-            className="rounded-full w-[40px] object-cover cursor-pointer"
-          />
+          <Link href="/login">
+            <Image
+              src={userImg}
+              alt="profile-image"
+              width="0"
+              height="0"
+              sizes="100vw"
+              className="rounded-full w-[40px] object-cover cursor-pointer"
+            />
+          </Link>
         </div>
       </div>
 
