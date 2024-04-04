@@ -12,12 +12,16 @@ import {
 } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
 import { FaMinus, FaPlus } from "react-icons/fa6";
+import axios from "axios";
+import { useSession } from "next-auth/react";
 
 const Cart = () => {
   const dispatch = useDispatch();
   const cart = useSelector((state: RootState) => state.cart);
   const toast = useSelector((state: RootState) => state.toast);
   const [quantity, setQuantity] = useState<number>(0);
+
+  const { data: session } = useSession();
 
   const handlerQuantity = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -31,7 +35,7 @@ const Cart = () => {
     } else if (quantity > stock) {
       quantity = stock;
       dispatch(increaseByQty({ id, quantity }));
-      dispatch(toggleToast({message: `You can only add ${stock} items.`}));
+      dispatch(toggleToast({ message: `You can only add ${stock} items.` }));
     } else {
       dispatch(increaseByQty({ id, quantity }));
     }
@@ -41,7 +45,7 @@ const Cart = () => {
     if (quantity > stock) {
       quantity = stock;
       dispatch(increaseByQty({ id, quantity }));
-      dispatch(toggleToast({message: `You can only add ${stock} items.`}));
+      dispatch(toggleToast({ message: `You can only add ${stock} items.` }));
     } else {
       dispatch(increaseByQty({ id, quantity }));
     }
@@ -69,10 +73,30 @@ const Cart = () => {
     // console.log(cart);
   }, [cart]);
 
+  const handleSummit = () => {
+    console.log("Test Complete");
+    console.log(session);
+
+    axios
+      .post("/api/cart", {
+        email: session?.user.email,
+      })
+      .then((res) => {
+        console.log(res.data);
+      });
+  };
+
   return (
     <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">
       {toast && <Toast />}
       <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] m-auto bg-white p-5">
+        {/* Test */}
+
+        <div className="bg-blue-500 p-2 w-fit">
+          <button onClick={handleSummit}>Add</button>
+        </div>
+
+        {/* Test End */}
         <h1 className="text-center text-bold text-3xl">Cart</h1>
         <ul className="">
           {cart.cartItem.map((item) => (
@@ -103,7 +127,7 @@ const Cart = () => {
                 <div className="flex flex-row justify-center items-center">
                   <FaMinus
                     onClick={() =>
-                      decreaseItem(item.product_id, item.quantity-1)
+                      decreaseItem(item.product_id, item.quantity - 1)
                     }
                     className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
                   />
@@ -119,7 +143,11 @@ const Cart = () => {
                   </span>
                   <FaPlus
                     onClick={() =>
-                      increaseItem(item.product_id, item.stock, item.quantity+1)
+                      increaseItem(
+                        item.product_id,
+                        item.stock,
+                        item.quantity + 1
+                      )
                     }
                     className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
                   />

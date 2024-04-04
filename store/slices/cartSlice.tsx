@@ -2,7 +2,6 @@
 
 import { calTotalPrice } from "@/utilities/calTotalPrice";
 import { createSlice } from "@reduxjs/toolkit";
-import { useDispatch } from "react-redux";
 
 type CartItem = {
   product_id: number;
