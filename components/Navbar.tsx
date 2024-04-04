@@ -7,7 +7,7 @@ import SearchBar from "./SearchBar";
 import { useRouter, usePathname } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
-import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 const Navbar = () => {
   const router = useRouter();
@@ -15,6 +15,8 @@ const Navbar = () => {
   const userImg = "/images/profile-temp-image.jpg";
   const cart = useSelector((state: RootState) => state.cart);
   const cartLength = cart.cartItem.length;
+
+  const { data: session, status } = useSession();
 
   const goToHome = () => {
     if (pathname !== "/") {
@@ -37,16 +39,25 @@ const Navbar = () => {
           <CartBar cartLength={cartLength} />
         </div>
         <div className="w-1/12">
-          <Link href="/login">
-            <Image
-              src={userImg}
-              alt="profile-image"
-              width="0"
-              height="0"
-              sizes="100vw"
-              className="rounded-full w-[40px] object-cover cursor-pointer"
-            />
-          </Link>
+          {status == "unauthenticated" ? (
+            <button
+              onClick={() => router.push("/login")}
+              className="w-fit bg-blue-500 p-2 rounded-md text-white border-2 border-white"
+            >
+              Login
+            </button>
+          ) : (
+            <div onClick={() => router.push("/profile")}>
+              <Image
+                src={userImg}
+                alt="profile-image"
+                width="0"
+                height="0"
+                sizes="100vw"
+                className="rounded-full w-[40px] object-cover cursor-pointer"
+              />
+            </div>
+          )}
         </div>
       </div>
 
