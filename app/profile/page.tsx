@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 export default function Profile() {
   const { data: session, status } = useSession();
+  // console.log(session);
 
   const router = useRouter();
 

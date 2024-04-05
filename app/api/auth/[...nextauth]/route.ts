@@ -8,7 +8,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {},
-      async authorize(credentials) {
+      async authorize(credentials): Promise<any> {
         if (!credentials) return null;
 
         const { email, password } = credentials as {
@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
 
         if (user && (await compare(password, user.password))) {
           return {
-            id: user.id,
+            id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,

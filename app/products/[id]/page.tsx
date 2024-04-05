@@ -21,6 +21,10 @@ import { useDispatch } from "react-redux";
 import { increment } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
 import { toggleToast } from "@/store/slices/toastSlice";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { store } from "@/store/store";
 
 type Product = {
   id: number;
@@ -57,8 +61,9 @@ const route = ({ params }: { params: { id: string } }) => {
   const [mainImg, setMainImg] = useState<number>(0);
   const [imgIndex, setImgIndex] = useState<number[]>([0, 4]);
   const totalPrice = calTotalPrice(product.price, product.discountPercentage);
-
   const toast = useSelector((state: RootState) => state.toast);
+  const { data: session } = useSession();
+  const router = useRouter();
 
   const dispatch = useDispatch();
 
@@ -121,6 +126,11 @@ const route = ({ params }: { params: { id: string } }) => {
     quantity: number,
     stock: number
   ) => {
+    if (!session) {
+      router.push(`/products/${id}`);
+      return;
+    }
+
     dispatch(
       increment({
         id,
@@ -132,6 +142,17 @@ const route = ({ params }: { params: { id: string } }) => {
         stock,
       })
     );
+
+    const { cart } = store.getState();
+    console.log(cart);
+
+    axios
+      .post("/api/cart", {
+        email: session?.user.email,
+        cart
+      })
+      .then((res) => console.log("Add item successful."))
+      .catch((error) => console.log(error));
   };
 
   useEffect(() => {
