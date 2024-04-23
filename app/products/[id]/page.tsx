@@ -123,33 +123,40 @@ const route = ({ params }: { params: { id: string } }) => {
     title: string,
     price: number,
     discountPercentage: number,
-    quantity: number,
-    stock: number
+    quantity: number
   ) => {
     if (!session) {
       router.push(`/products/${id}`);
       return;
     }
 
-    dispatch(
-      increment({
-        id,
-        thumbnail,
-        title,
-        price,
-        discountPercentage,
-        quantity,
-        stock,
-      })
-    );
+    // dispatch(
+    //   increment({
+    //     id,
+    //     thumbnail,
+    //     title,
+    //     price,
+    //     discountPercentage,
+    //     quantity,
+    //   })
+    // );
 
-    const { cart } = store.getState();
-    console.log(cart);
+    // const { cart } = store.getState();
+    // console.log(cart);
+
+    const product = {
+      id,
+      thumbnail,
+      title,
+      price,
+      discountPercentage,
+      quantity,
+    };
 
     axios
       .post("/api/cart", {
         email: session?.user.email,
-        cart
+        product,
       })
       .then((res) => console.log("Add item successful."))
       .catch((error) => console.log(error));
@@ -293,8 +300,7 @@ const route = ({ params }: { params: { id: string } }) => {
                       product.title,
                       product.price,
                       product.discountPercentage,
-                      quantity,
-                      product.stock
+                      quantity
                     )
                   }
                   className="flex flex-row justify-center items-center w-[200px] h-[36px] bg-blue-500 text-white rounded-sm"

@@ -23,6 +23,11 @@ const Cart = () => {
 
   const { data: session } = useSession();
 
+
+  // Get Cart
+  
+
+
   const handlerQuantity = (
     e: React.ChangeEvent<HTMLInputElement>,
     stock: number,
@@ -92,9 +97,9 @@ const Cart = () => {
       <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] m-auto bg-white p-5">
         {/* Test */}
 
-        <div className="bg-blue-500 p-2 w-fit">
+        {/* <div className="bg-blue-500 p-2 w-fit">
           <button onClick={handleSummit}>Add</button>
-        </div>
+        </div> */}
 
         {/* Test End */}
         <h1 className="text-center text-bold text-3xl">Cart</h1>
