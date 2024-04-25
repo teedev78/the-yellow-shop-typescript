@@ -14,19 +14,48 @@ import Toast from "@/components/Toast";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
+type Cart = {
+  id: number;
+  title: string;
+  price: number;
+  discountPercentage: number;
+  thumbnail: string;
+  quantity: number;
+};
 
 const Cart = () => {
   const dispatch = useDispatch();
-  const cart = useSelector((state: RootState) => state.cart);
+  // const cart = useSelector((state: RootState) => state.cart);
   const toast = useSelector((state: RootState) => state.toast);
   const [quantity, setQuantity] = useState<number>(0);
+  const [cart, setCart] = useState<Cart[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const { data: session } = useSession();
+  const router = useRouter();
 
+  const getUserCart = async () => {
+    await axios
+      .post(`/api/user/${session?.user.id}/cart`, {
+        id: session?.user.id,
+      })
+      .then((result) => {
+        console.log(result.data);
+        setCart(result.data.userCart.cart);
+      });
+    setLoading(false);
+  };
 
   // Get Cart
-  
+  useEffect(() => {
+    if (!session) {
+      router.push("/login");
+    }
 
+    getUserCart();
+  }, [session, router]);
 
   const handlerQuantity = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -104,39 +133,40 @@ const Cart = () => {
         {/* Test End */}
         <h1 className="text-center text-bold text-3xl">Cart</h1>
         <ul className="">
-          {cart.cartItem.map((item) => (
-            <li
-              key={item.product_id}
-              className="flex flex-row justify-evenly items-center"
-            >
-              <div className="border-2 border-blue-300 w-1/12">
-                <Image
-                  src={item.thumbnail}
-                  alt={item.title}
-                  width="0"
-                  height="0"
-                  sizes="100vw"
-                  className="w-[100px] h-[100px] object-contain"
-                />
-              </div>
-              <div className="border-2 border-blue-300 w-5/12">
-                {item.title}
-              </div>
-              <div className="border-2 border-blue-300 w-1/12 line-through">
-                ${item.price}
-              </div>
-              <div className="border-2 border-blue-300 w-1/12">
-                ${item.discountPrice}
-              </div>
-              <div className="border-2 border-blue-300 w-2/12">
-                <div className="flex flex-row justify-center items-center">
-                  <FaMinus
-                    onClick={() =>
-                      decreaseItem(item.product_id, item.quantity - 1)
-                    }
-                    className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
+          {loading ? (
+            <div>Loading...</div>
+          ) : (
+            cart.map((item: Cart) => (
+              <li
+                key={item.id}
+                className="flex flex-row justify-evenly items-center"
+              >
+                <div className="border-2 border-blue-300 w-1/12">
+                  <Image
+                    src={item.thumbnail}
+                    alt={item.title}
+                    width="0"
+                    height="0"
+                    sizes="100vw"
+                    className="w-[100px] h-[100px] object-contain"
                   />
-                  <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
+                </div>
+                <div className="border-2 border-blue-300 w-5/12">
+                  {item.title}
+                </div>
+                <div className="border-2 border-blue-300 w-1/12 line-through">
+                  ${item.price}
+                </div>
+                <div className="border-2 border-blue-300 w-1/12">
+                  ${item.discountPercentage}
+                </div>
+                <div className="border-2 border-blue-300 w-2/12">
+                  <div className="flex flex-row justify-center items-center">
+                    <FaMinus
+                      onClick={() => decreaseItem(item.id, item.quantity - 1)}
+                      className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
+                    />
+                    {/* <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
                     <input
                       type="text"
                       value={item.quantity}
@@ -145,32 +175,34 @@ const Cart = () => {
                       }
                       className="w-full text-center"
                     />
-                  </span>
-                  <FaPlus
-                    onClick={() =>
-                      increaseItem(
-                        item.product_id,
-                        item.stock,
-                        item.quantity + 1
-                      )
-                    }
-                    className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
-                  />
+                  </span> */}
+                    <FaPlus
+                      onClick={() =>
+                        increaseItem(
+                          item.id,
+                          // item.stock,
+                          1,
+                          item.quantity + 1
+                        )
+                      }
+                      className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="border-2 border-blue-300 w-1/12">
-                ${(item.discountPrice * item.quantity).toFixed(2)}
-              </div>
-              <div
-                className="border-2 border-blue-300 w-1/12"
-                onClick={() => removeItem(item.product_id)}
-              >
-                Remove
-              </div>
-            </li>
-          ))}
+                <div className="border-2 border-blue-300 w-1/12">
+                  ${(item.discountPercentage * item.quantity).toFixed(2)}
+                </div>
+                <div
+                  className="border-2 border-blue-300 w-1/12"
+                  onClick={() => removeItem(item.id)}
+                >
+                  Remove
+                </div>
+              </li>
+            ))
+          )}
         </ul>
-        <div>Total Price : ${cart.total_price}</div>
+        {/* <div>Total Price : ${cart.total_price}</div> */}
       </section>
     </main>
   );

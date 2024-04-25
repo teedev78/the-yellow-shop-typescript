@@ -1,5 +1,5 @@
 import { connectToDatabase } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
 
 type Cart = {
   id: number;
@@ -12,16 +12,17 @@ type Cart = {
 export async function POST(request: any) {
   try {
     const data = await request.json();
-    const { email, product } = data;
+    const { id, product } = data;
 
     const client = await connectToDatabase();
     const db = client.db();
 
-    const user = await db.collection("users").findOne({ email });
+    const query = {_id: new ObjectId(id as string)};
+    const user = await db.collection("users").findOne(query);
 
     if (!user) {
       client.close();
-      return NextResponse.json({ status: 422, message: "user not found." });
+      return Response.json({ status: 422, message: "user not found." });
     }
 
     const isInCart = user.cart.find((item: Cart) => item.id === product.id);
@@ -33,7 +34,7 @@ export async function POST(request: any) {
 
       await db
         .collection("users")
-        .updateOne({ email }, { $set: { cart: newCart } });
+        .updateOne(query, { $set: { cart: newCart } });
     } else {
       user.cart.map((item: Cart) => {
         if (item.id === product.id) {
@@ -43,7 +44,7 @@ export async function POST(request: any) {
 
       await db
         .collection("users")
-        .updateOne({ email }, { $set: { cart: user.cart } });
+        .updateOne(query, { $set: { cart: user.cart } });
     }
 
     client.close();
