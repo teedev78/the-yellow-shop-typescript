@@ -18,7 +18,7 @@ import {
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { useDispatch } from "react-redux";
-import { increment } from "@/store/slices/cartSlice";
+import { addItem } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
 import { toggleToast } from "@/store/slices/toastSlice";
 import { useSession } from "next-auth/react";
@@ -55,6 +55,10 @@ const initialProductValue = {
 };
 
 const route = ({ params }: { params: { id: string } }) => {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
   const [product, setProduct] = useState<Product>(initialProductValue);
   const [loading, setLoading] = useState<boolean>(true);
   const [quantity, setQuantity] = useState<number>(1);
@@ -62,16 +66,20 @@ const route = ({ params }: { params: { id: string } }) => {
   const [imgIndex, setImgIndex] = useState<number[]>([0, 4]);
   const totalPrice = calTotalPrice(product.price, product.discountPercentage);
   const toast = useSelector((state: RootState) => state.toast);
-  const { data: session } = useSession();
-  const router = useRouter();
+  const cart = useSelector((state: RootState) => state.cart);
 
-  const dispatch = useDispatch();
-
+  // ดึงข้อมูลสินค้า
   const fetchProduct = async (id: string) => {
     const data = await fetchGetProduct(id);
     setProduct(data);
   };
 
+  useEffect(() => {
+    fetchProduct(params.id);
+    setLoading(false);
+  }, []);
+
+  // ตัวควบคุมสไลด์รูปสินค้า
   const handlerImagesSlide = (slide: string) => {
     if (slide === "left" && imgIndex[0] !== 0) {
       setImgIndex(imgIndex.map((i) => i - 1));
@@ -82,90 +90,87 @@ const route = ({ params }: { params: { id: string } }) => {
     }
   };
 
-  const handlerQuantity = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const num = Number(e.target.value.replace(/\D/g, ""));
-    if (num === 0) {
+  // เช็คจำนวนสินค้าไม่เกินในสต็อกสินค้า
+  const overStock = async (product_id: number, quantity: number) => {
+    try {
+      const res = await axios.get(
+        `https://dummyjson.com/products/${product_id}`
+      );
+      const product = res.data;
+      if (product.stock >= quantity) {
+        return { valid: true, quantity: quantity };
+      } else {
+        return { valid: false, quantity: product.stock };
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
+  const handlerQuantity = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQty = Number(e.target.value.replace(/\D/g, ""));
+    const checkStock = await overStock(product.id, newQty);
+    if (newQty === 0) {
       setQuantity(1);
-    } else if (num > product.stock) {
-      setQuantity(product.stock);
+    } else if (checkStock?.valid) {
+      setQuantity(checkStock?.quantity);
       dispatch(
-        toggleToast({ message: `You can only add ${product.stock} items.` })
+        toggleToast({
+          message: `You can only add ${checkStock?.quantity} items.`,
+        })
       );
     } else {
-      setQuantity(num);
+      setQuantity(newQty);
     }
   };
 
-  const increaseItem = () => {
-    const num = quantity + 1;
-    if (num > product.stock) {
-      setQuantity(product.stock);
-      dispatch(
-        toggleToast({ message: `You can only add ${product.stock} items.` })
-      );
+  // เพิ่มจำนวนสินค้าจากปุ่มเพิ่มสินค้า
+  const increaseItem = async () => {
+    const newQty = quantity + 1;
+    const checkStock = await overStock(product.id, newQty);
+    if (checkStock?.valid) {
+      setQuantity(checkStock?.quantity);
     } else {
-      setQuantity(num);
+      setQuantity(checkStock?.quantity);
+      dispatch(
+        toggleToast({
+          message: `You can only add ${checkStock?.quantity} items.`,
+        })
+      );
     }
   };
 
+  // ลดจำนวนสินค้าจากปุ่มลดสินค้า
   const decreaseItem = () => {
-    const num = quantity - 1;
-    if (num <= 1) {
+    const newQty = quantity - 1;
+    if (newQty <= 1) {
       setQuantity(1);
     } else {
-      setQuantity(num);
+      setQuantity(newQty);
     }
   };
 
+  // เพิ่มสินค้าลงในตะกร้า
   const addToCart = (
-    id: number,
+    product_id: number,
     thumbnail: string,
     title: string,
     price: number,
     discountPercentage: number,
     quantity: number
   ) => {
-    if (!session) {
-      router.push(`/products/${id}`);
-      return;
-    }
-
-    // dispatch(
-    //   increment({
-    //     id,
-    //     thumbnail,
-    //     title,
-    //     price,
-    //     discountPercentage,
-    //     quantity,
-    //   })
-    // );
-
-    // const { cart } = store.getState();
-    // console.log(cart);
-
-    const product = {
-      id,
-      thumbnail,
-      title,
-      price,
-      discountPercentage,
-      quantity,
-    };
-
-    axios
-      .post("/api/cart", {
-        email: session?.user.email,
-        product,
+    dispatch(
+      addItem({
+        product_id,
+        thumbnail,
+        title,
+        price,
+        discountPercentage,
+        quantity,
       })
-      .then((res) => console.log("Add item successful."))
-      .catch((error) => console.log(error));
+    );
   };
-
-  useEffect(() => {
-    fetchProduct(params.id);
-    setLoading(false);
-  }, []);
 
   return (
     <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">

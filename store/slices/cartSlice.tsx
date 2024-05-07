@@ -2,15 +2,15 @@
 
 import { calTotalPrice } from "@/utilities/calTotalPrice";
 import { createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 
 type CartItem = {
   product_id: number;
   thumbnail: string;
   title: string;
   price: number;
-  discountPrice: number;
+  discountedPrice: number;
   quantity: number;
-  stock: number;
 };
 
 type Cart = {
@@ -32,42 +32,43 @@ const cartSlice = createSlice({
     countTotalPrice: (state) => {
       let total_price = 0;
       state.cartItem.forEach((item) => {
-        total_price += item.discountPrice * item.quantity;
+        total_price += item.discountedPrice * item.quantity;
       });
       state.total_price = Number(total_price.toFixed(2));
     },
-    increment: (state, action) => {
+    addItem: (state, action) => {
       // state.value += action.payload;
       const {
-        id,
+        product_id,
         thumbnail,
         title,
         price,
         discountPercentage,
         quantity,
-        stock,
       } = action.payload;
 
-      const hasItem = state.cartItem.find((item) => item.product_id === id);
+      const hasItem = state.cartItem.find(
+        (item) => item.product_id === product_id
+      );
       if (hasItem === undefined) {
         state.cartItem.push({
-          product_id: id,
+          product_id: product_id,
           thumbnail: thumbnail,
           title: title,
           price: price,
-          discountPrice: calTotalPrice(price, discountPercentage),
+          discountedPrice: calTotalPrice(price, discountPercentage),
           quantity: quantity,
-          stock: stock,
         });
       } else {
         state.cartItem.map((item) => {
-          if (item.product_id === id) {
+          if (item.product_id === product_id) {
             const total_qty = (item.quantity += quantity);
-            if (total_qty <= stock) {
-              item.quantity = total_qty;
-            } else {
-              item.quantity = stock;
-            }
+            item.quantity = total_qty;
+            // if (total_qty <= stock) {
+            //   item.quantity = total_qty;
+            // } else {
+            //   item.quantity = stock;
+            // }
           }
         });
       }
@@ -98,7 +99,7 @@ const cartSlice = createSlice({
   extraReducers: (builder) => {},
 });
 
-export const { countTotalPrice, increment, increaseByQty, remove } =
+export const { countTotalPrice, addItem, increaseByQty, remove } =
   cartSlice.actions;
 
 export default cartSlice.reducer;
