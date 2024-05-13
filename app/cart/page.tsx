@@ -61,39 +61,22 @@ const Cart = () => {
   // }, [session]);
 
   // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
-  const handlerQuantity = async (
+  const handlerQuantity = (
     e: React.ChangeEvent<HTMLInputElement>,
     id: number
   ) => {
-    // setNewQty(Number(e.target.value.replace(/\D/g, "")));
-    // const stock = await checkOverStock(id, newQty);
-    // if (newQty === 0) {
-    //   dispatch(
-    //     increaseByQty({
-    //       id,
-    //       quantity: 1,
-    //     })
-    //   );
-    // } else if (!stock?.valid) {
-    //   dispatch(
-    //     increaseByQty({
-    //       id,
-    //       quantity: stock?.quantity,
-    //     })
-    //   );
-    //   dispatch(
-    //     toggleToast({
-    //       message: `You can only add ${stock?.quantity} items.`,
-    //     })
-    //   );
-    // } else {
-    //   dispatch(
-    //     increaseByQty({
-    //       id,
-    //       quantity: stock?.quantity,
-    //     })
-    //   );
-    // }
+    let quantity = Number(e.target.value.replace(/\D/g, ""));
+    if (quantity === 0) {
+      quantity = 1;
+    }
+    dispatch(
+      increaseByQty({
+        id: id,
+        quantity: quantity,
+      })
+    );
+    setNewQty(quantity);
+    setProductId(id);
   };
 
   // เพิ่มจำนวนสินค้าจากปุ่มเพิ่มสินค้า
@@ -121,16 +104,16 @@ const Cart = () => {
   };
 
   // เช็คจำนวนสินค้าจากฐานข้อมูลสินค้า
-  const checkOverStock = async (product_id: number, quantity: number) => {
-    let stock = { valid: false, quantity };
+  const checkOverStock = async (product_id: number, newQuantity: number) => {
+    let stock = { valid: false, quantity: 0 };
 
     try {
       const res = await axios.get(
         `https://dummyjson.com/products/${product_id}`
       );
       const product = res.data;
-      if (product.stock >= quantity) {
-        return (stock = { valid: true, quantity });
+      if (product.stock >= newQuantity && newQuantity > 0) {
+        return (stock = { valid: true, quantity: newQuantity });
       } else {
         return (stock = { valid: false, quantity: product.stock });
       }

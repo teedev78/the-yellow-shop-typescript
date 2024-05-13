@@ -150,6 +150,11 @@ const route = ({ params }: { params: { id: string } }) => {
         quantity,
       })
     );
+    dispatch(
+      toggleToast({
+        message: "Add item to cart.",
+      })
+    );
   };
 
   return (
