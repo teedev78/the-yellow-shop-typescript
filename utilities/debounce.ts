@@ -5,10 +5,14 @@ export const useDebounce = <T>(value: T, delay = 500) => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
+      console.log("setting new timeout");
       setDebouncedValue(value);
     }, delay);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      console.log("clearing the timeout");
+      clearTimeout(timeout);
+    };
   }, [value, delay]);
 
   return debouncedValue;

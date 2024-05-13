@@ -66,7 +66,6 @@ const route = ({ params }: { params: { id: string } }) => {
   const [imgIndex, setImgIndex] = useState<number[]>([0, 4]);
   const totalPrice = calTotalPrice(product.price, product.discountPercentage);
   const toast = useSelector((state: RootState) => state.toast);
-  const cart = useSelector((state: RootState) => state.cart);
 
   // ดึงข้อมูลสินค้า
   const fetchProduct = async (id: string) => {
@@ -90,34 +89,16 @@ const route = ({ params }: { params: { id: string } }) => {
     }
   };
 
-  // เช็คจำนวนสินค้าไม่เกินในสต็อกสินค้า
-  const overStock = async (product_id: number, quantity: number) => {
-    try {
-      const res = await axios.get(
-        `https://dummyjson.com/products/${product_id}`
-      );
-      const product = res.data;
-      if (product.stock >= quantity) {
-        return { valid: true, quantity: quantity };
-      } else {
-        return { valid: false, quantity: product.stock };
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
-  const handlerQuantity = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlerQuantity = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQty = Number(e.target.value.replace(/\D/g, ""));
-    const checkStock = await overStock(product.id, newQty);
     if (newQty === 0) {
       setQuantity(1);
-    } else if (checkStock?.valid) {
-      setQuantity(checkStock?.quantity);
+    } else if (product.stock < newQty) {
+      setQuantity(product.stock);
       dispatch(
         toggleToast({
-          message: `You can only add ${checkStock?.quantity} items.`,
+          message: `You can only add ${product.stock} items.`,
         })
       );
     } else {
@@ -128,14 +109,13 @@ const route = ({ params }: { params: { id: string } }) => {
   // เพิ่มจำนวนสินค้าจากปุ่มเพิ่มสินค้า
   const increaseItem = async () => {
     const newQty = quantity + 1;
-    const checkStock = await overStock(product.id, newQty);
-    if (checkStock?.valid) {
-      setQuantity(checkStock?.quantity);
+    if (product.stock >= newQty) {
+      setQuantity(newQty);
     } else {
-      setQuantity(checkStock?.quantity);
+      setQuantity(product.stock);
       dispatch(
         toggleToast({
-          message: `You can only add ${checkStock?.quantity} items.`,
+          message: `You can only add ${product.stock} items.`,
         })
       );
     }

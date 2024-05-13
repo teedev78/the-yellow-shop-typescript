@@ -34,7 +34,10 @@ const Cart = () => {
   const cart = useSelector((state: RootState) => state.cart);
   const toast = useSelector((state: RootState) => state.toast);
   // const [loading, setLoading] = useState<boolean>(true);
-  const [debounced, setDebounced] = useState<number>();
+  const [newQty, setNewQty] = useState<number>(0);
+  const [productId, setProductId] = useState<number>(0);
+  const [overStock, setOverStock] = useState<any>({});
+  // const debouncedQty = useDebounce(qty);
 
   // ดึงข้อมูลตะกร้าสินค้า
   // const fetchCart = async () => {
@@ -57,7 +60,67 @@ const Cart = () => {
   //   setLoading(false);
   // }, [session]);
 
-  // เช็คจำนวนสินค้าไม่เกินในสต็อกสินค้า
+  // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
+  const handlerQuantity = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    id: number
+  ) => {
+    // setNewQty(Number(e.target.value.replace(/\D/g, "")));
+    // const stock = await checkOverStock(id, newQty);
+    // if (newQty === 0) {
+    //   dispatch(
+    //     increaseByQty({
+    //       id,
+    //       quantity: 1,
+    //     })
+    //   );
+    // } else if (!stock?.valid) {
+    //   dispatch(
+    //     increaseByQty({
+    //       id,
+    //       quantity: stock?.quantity,
+    //     })
+    //   );
+    //   dispatch(
+    //     toggleToast({
+    //       message: `You can only add ${stock?.quantity} items.`,
+    //     })
+    //   );
+    // } else {
+    //   dispatch(
+    //     increaseByQty({
+    //       id,
+    //       quantity: stock?.quantity,
+    //     })
+    //   );
+    // }
+  };
+
+  // เพิ่มจำนวนสินค้าจากปุ่มเพิ่มสินค้า
+  const increaseItem = (id: number, quantity: number) => {
+    dispatch(increaseByQty({ id: id, quantity: quantity + 1 }));
+    setNewQty(quantity + 1);
+    setProductId(id);
+  };
+
+  // ลดจำนวนสินค้าจากปุ่มลดสินค้า
+  const decreaseItem = (id: number, quantity: number) => {
+    if (quantity <= 1) {
+      quantity = 1;
+      dispatch(increaseByQty({ id, quantity }));
+    } else {
+      dispatch(increaseByQty({ id, quantity: quantity - 1 }));
+    }
+    setNewQty(quantity - 1);
+    setProductId(id);
+  };
+
+  // ลบสินค้าออกจากตะกร้า
+  const removeItem = (id: number) => {
+    dispatch(remove({ id }));
+  };
+
+  // เช็คจำนวนสินค้าจากฐานข้อมูลสินค้า
   const checkOverStock = async (product_id: number, quantity: number) => {
     let stock = { valid: false, quantity };
 
@@ -76,83 +139,33 @@ const Cart = () => {
     }
   };
 
-  // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
-  const handlerQuantity = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    id: number
-  ) => {
-    const newQty = Number(e.target.value.replace(/\D/g, ""));
-    const stock = await checkOverStock(id, newQty);
-    if (newQty === 0) {
-      dispatch(
-        increaseByQty({
-          id,
-          quantity: 1,
-        })
-      );
-    } else if (!stock?.valid) {
-      dispatch(
-        increaseByQty({
-          id,
-          quantity: stock?.quantity,
-        })
-      );
-      dispatch(
-        toggleToast({
-          message: `You can only add ${stock?.quantity} items.`,
-        })
-      );
-    } else {
-      dispatch(
-        increaseByQty({
-          id,
-          quantity: stock?.quantity,
-        })
-      );
-    }
-  };
+  // เช็คจำนวนสินค้าในสต็อกและขึ้นแจ้งเตือนเมื่อสินค้าเกินกว่าในสต็อก
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      // console.log("value changed..");
+      // console.log(productId, newQty);
+      if (productId === 0) return;
 
-  // เพิ่มจำนวนสินค้าจากปุ่มเพิ่มสินค้า
-  const increaseItem = async (id: number, quantity: number) => {
-    const stock = await checkOverStock(id, quantity);
+      const stock = await checkOverStock(productId, newQty);
 
-    if (stock?.valid) {
-      dispatch(
-        increaseByQty({
-          id,
-          quantity: stock.quantity,
-        })
-      );
-      console.log(cart);
-    } else {
-      dispatch(
-        increaseByQty({
-          id,
-          quantity: stock?.quantity,
-        })
-      );
-      dispatch(
-        toggleToast({
-          message: `You can only add ${stock?.quantity} items.`,
-        })
-      );
-    }
-  };
-
-  // ลดจำนวนสินค้าจากปุ่มลดสินค้า
-  const decreaseItem = (id: number, quantity: number) => {
-    if (quantity <= 1) {
-      quantity = 1;
-      dispatch(increaseByQty({ id, quantity }));
-    } else {
-      dispatch(increaseByQty({ id, quantity }));
-    }
-  };
-
-  // ลบสินค้าออกจากตะกร้า
-  const removeItem = (id: number) => {
-    dispatch(remove({ id }));
-  };
+      if (stock !== undefined && !stock.valid) {
+        // console.log("over stock");
+        dispatch(increaseByQty({ id: productId, quantity: stock.quantity }));
+        dispatch(
+          toggleToast({
+            message: `You can only add ${stock.quantity} items.`,
+          })
+        );
+        setNewQty(0);
+        setProductId(0);
+      } else {
+        // console.log("added");
+        setNewQty(0);
+        setProductId(0);
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [cart]);
 
   return (
     <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">
@@ -194,9 +207,7 @@ const Cart = () => {
               <div className="border-2 border-blue-300 w-2/12">
                 <div className="flex flex-row justify-center items-center">
                   <FaMinus
-                    onClick={() =>
-                      decreaseItem(item.product_id, item.quantity - 1)
-                    }
+                    onClick={() => decreaseItem(item.product_id, item.quantity)}
                     className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
                   />
                   <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
@@ -208,9 +219,7 @@ const Cart = () => {
                     />
                   </span>
                   <FaPlus
-                    onClick={() =>
-                      increaseItem(item.product_id, item.quantity + 1)
-                    }
+                    onClick={() => increaseItem(item.product_id, item.quantity)}
                     className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
                   />
                 </div>
