@@ -23,8 +23,6 @@ import Toast from "@/components/Toast";
 import { toggleToast } from "@/store/slices/toastSlice";
 import { useSession } from "next-auth/react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
-import { store } from "@/store/store";
 
 type Product = {
   id: number;
@@ -55,17 +53,18 @@ const initialProductValue = {
 };
 
 const route = ({ params }: { params: { id: string } }) => {
-  const { data: session } = useSession();
-  const router = useRouter();
+  const { data: session, status } = useSession();
   const dispatch = useDispatch();
+  const toast = useSelector((state: RootState) => state.toast);
+  const cart = useSelector((state: RootState) => state.cart);
 
   const [product, setProduct] = useState<Product>(initialProductValue);
   const [loading, setLoading] = useState<boolean>(true);
   const [quantity, setQuantity] = useState<number>(1);
   const [mainImg, setMainImg] = useState<number>(0);
   const [imgIndex, setImgIndex] = useState<number[]>([0, 4]);
+  const [isCartUpdated, setIsCartUpdated] = useState<boolean>(false);
   const totalPrice = calTotalPrice(product.price, product.discountPercentage);
-  const toast = useSelector((state: RootState) => state.toast);
 
   // ดึงข้อมูลสินค้า
   const fetchProduct = async (id: string) => {
@@ -132,7 +131,7 @@ const route = ({ params }: { params: { id: string } }) => {
   };
 
   // เพิ่มสินค้าลงในตะกร้า
-  const addToCart = (
+  const addToCart = async (
     product_id: number,
     thumbnail: string,
     title: string,
@@ -150,12 +149,48 @@ const route = ({ params }: { params: { id: string } }) => {
         quantity,
       })
     );
+
     dispatch(
       toggleToast({
         message: "Add item to cart.",
       })
     );
+    setIsCartUpdated(true);
   };
+
+  // update cart in db
+  const updateCartDB = async () => {
+    if (status === "unauthenticated" || session === null) {
+      toggleToast({
+        message: "please login before add item.",
+      });
+    } else {
+      try {
+        const userId = session.user.id;
+
+        await axios
+          .post(`http://localhost:3000/api/user/${userId}/updateCart`, {
+            userCart: {
+              userId: userId,
+              cartItem: cart,
+            },
+          })
+          .then((response) => {
+            console.log("cart db updated");
+          })
+          .catch((error) => {
+            console.log("Error : ", error);
+          });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    updateCartDB();
+    setIsCartUpdated(false);
+  }, [isCartUpdated]);
 
   return (
     <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">

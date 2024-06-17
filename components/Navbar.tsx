@@ -12,12 +12,12 @@ import { useSession } from "next-auth/react";
 const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const userImg = "/images/profile-temp-image.jpg";
   const cart = useSelector((state: RootState) => state.cart);
   const cartLength = cart.cartItem.length;
 
   const { data: session, status } = useSession();
-
+  console.log(session);
+  
   const goToHome = () => {
     if (pathname !== "/") {
       router.push("/");
@@ -39,23 +39,25 @@ const Navbar = () => {
           <CartBar cartLength={cartLength} />
         </div>
         <div className="w-1/12">
-          {status == "unauthenticated" ? (
-            <button
-              onClick={() => router.push("/login")}
-              className="w-fit bg-blue-500 p-2 rounded-md text-white border-2 border-white"
-            >
-              Login
-            </button>
-          ) : (
+          {status === "authenticated" && session !== null ? (
             <div onClick={() => router.push("/profile")}>
               <Image
-                src={userImg}
+                src={session.user.image}
                 alt="profile-image"
                 width="0"
                 height="0"
                 sizes="100vw"
                 className="rounded-full w-[40px] object-cover cursor-pointer"
               />
+            </div>
+          ) : (
+            <div>
+              <button
+                onClick={() => router.push("/sign-in")}
+                className="w-fit bg-blue-500 p-2 rounded-md text-white border-2 border-white"
+              >
+                Login
+              </button>
             </div>
           )}
         </div>

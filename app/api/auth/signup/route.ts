@@ -1,5 +1,7 @@
-import { connectToDatabase } from "@/lib/db";
 import { hash } from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export async function POST(request: any) {
   try {
@@ -15,25 +17,26 @@ export async function POST(request: any) {
       return Response.json({ status: 422, message: "Invalid Input." });
     }
 
-    const client = await connectToDatabase();
-    const db = client.db();
-
-    const existingUser = await db.collection("users").findOne({ email: email });
+    const existingUser = (await prisma.user.findUnique({
+      where: { email },
+    })) as any;
 
     if (existingUser) {
-      client.close();
       return Response.json({ status: 422, message: "User exists already!" });
     }
 
     const hashedPassword = await hash(password, 10);
 
-    const result = await db.collection("users").insertOne({
-      email,
-      password: hashedPassword,
-      name
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        image: "/images/profile-temp-image.jpg",
+        role: "member",
+      },
     });
 
-    client.close();
     return Response.json({ status: 201, message: "Created user!" });
   } catch (error) {
     return Response.json({ message: "user could not be created" });

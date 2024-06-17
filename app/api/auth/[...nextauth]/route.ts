@@ -1,9 +1,19 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { connectToDatabase } from "@/lib/db";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
 import { compare } from "bcryptjs";
+import { Adapter } from "next-auth/adapters";
+import GoogleProvider from "next-auth/providers/google";
+
+const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -16,10 +26,9 @@ export const authOptions: NextAuthOptions = {
           password: string;
         };
 
-        const client = await connectToDatabase();
-        const db = client.db();
-
-        const user = await db.collection("users").findOne({ email });
+        const user = (await prisma.user.findUnique({
+          where: { email },
+        })) as any;
 
         if (user && (await compare(password, user.password))) {
           return {
@@ -27,16 +36,27 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             role: user.role,
+            image: user.image,
+            // userCart: user.userCart,
           };
         } else {
           throw new Error("Invalid email or password!");
         }
       },
     }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      profile(profile): any {
+        return {
+          id: profile.sub,
+          name: `${profile.given_name} ${profile.family_name}`,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
+    }),
   ],
-  session: {
-    strategy: "jwt",
-  },
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
@@ -49,11 +69,15 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.image = token.picture;
+        // session.user.userCart = token.userCart;
       }
       return session;
     },
+    async redirect({ baseUrl }) {
+      return `${baseUrl}/profile`;
+    },
   },
-  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

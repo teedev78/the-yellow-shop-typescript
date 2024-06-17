@@ -3,16 +3,21 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { updateCartFromDB } from "@/store/slices/cartSlice";
 
 export default function Profile() {
   const { data: session, status } = useSession();
+  const dispatch = useDispatch();
   // console.log(session);
 
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status === "unauthenticated" || session === null) {
       router.push("/");
+    } else {
+      // dispatch(updateCartFromDB(session.user.userCart.cartItem));
     }
   }, [status, router]);
 
@@ -22,6 +27,12 @@ export default function Profile() {
     session.user && (
       <div className="flex h-screen items-center justify-center">
         <div className="bg-white p-6 rounded-md shadow-md">
+          <div className="text-center mb-4">
+            <img
+              src={session.user.image}
+              className="rounded-full w-20 h-20 mx-auto"
+            />
+          </div>
           <p>
             Welcome, <b>{session.user.name}!</b>
           </p>

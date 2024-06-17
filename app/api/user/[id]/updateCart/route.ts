@@ -1,18 +1,10 @@
 import { connectToDatabase } from "@/lib/db";
 import { ObjectId } from "mongodb";
 
-type Cart = {
-  id: number;
-  title: string;
-  price: number;
-  quantity: number;
-  thumbnail: string;
-};
-
 export async function POST(request: any) {
   try {
     const data = await request.json();
-    const { userId, newCart } = data;
+    const { userId, cartItem } = data;
 
     // console.log(userId, newCart);
 
@@ -20,33 +12,30 @@ export async function POST(request: any) {
     const db = client.db();
 
     const query = { _id: new ObjectId(userId as string) };
-    const user = await db.collection("users").findOne(query);
+    const user = await db.collection("User").findOne(query);
 
     if (!user) {
       client.close();
       return Response.json({ status: 422, message: "user not found." });
     }
 
-    // const isInCart = user.cart.find((item: Cart) => item.id === product.id);
-    // // console.log(isInCart);
-    // // console.log(user.cart);
+    const cart = await db.collection("Cart").findOne(query);
+    if (!cart) {
+      await db.collection("Cart").insertOne({
+        userId: query,
+        cartItem: cartItem,
+        updatedAt: Date.now(),
+      });
 
-    // if (isInCart === undefined) {
-    //   const newCart = [...user.cart, product];
+      client.close();
+      return Response.json({ status: 201, message: "Cart created." });
+    }
 
-    //   await db
-    //     .collection("users")
-    //     .updateOne(query, { $set: { cart: newCart } });
-    // } else {
-    //   user.cart.map((item: Cart) => {
-    //     if (item.id === product.id) {
-    //       item.quantity += product.quantity;
-    //     }
-    //   });
+    await db
+      .collection("Cart")
+      .updateOne(query, { $set: { cartItem } });
 
-    await db.collection("users").updateOne(query, { $set: { cart: newCart } });
-
-    // client.close();
+    client.close();
     return Response.json({ status: 201, message: "Cart Updated." });
   } catch (error) {
     return Response.json({ status: 422, message: "Something went wrong..." });

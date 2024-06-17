@@ -2,7 +2,6 @@
 
 import { calTotalPrice } from "@/utilities/calTotalPrice";
 import { createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
 
 type CartItem = {
   product_id: number;
@@ -36,6 +35,11 @@ const cartSlice = createSlice({
       });
       state.total_price = Number(total_price.toFixed(2));
     },
+    updateCartFromDB: (state, action) => {
+      const data = action.payload;
+      console.log(data);
+      state.cartItem = data.cartItem;
+    },
     addItem: (state, action) => {
       // state.value += action.payload;
       const {
@@ -64,11 +68,6 @@ const cartSlice = createSlice({
           if (item.product_id === product_id) {
             const total_qty = (item.quantity += quantity);
             item.quantity = total_qty;
-            // if (total_qty <= stock) {
-            //   item.quantity = total_qty;
-            // } else {
-            //   item.quantity = stock;
-            // }
           }
         });
       }
@@ -99,7 +98,12 @@ const cartSlice = createSlice({
   extraReducers: (builder) => {},
 });
 
-export const { countTotalPrice, addItem, increaseByQty, remove } =
-  cartSlice.actions;
+export const {
+  countTotalPrice,
+  updateCartFromDB,
+  addItem,
+  increaseByQty,
+  remove,
+} = cartSlice.actions;
 
 export default cartSlice.reducer;
