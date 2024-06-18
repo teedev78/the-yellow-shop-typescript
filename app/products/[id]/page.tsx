@@ -20,7 +20,7 @@ import type { RootState } from "@/store/store";
 import { useDispatch } from "react-redux";
 import { addItem } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
-import { toggleToast } from "@/store/slices/toastSlice";
+import { toggleToast, ToastRemoveItem } from "@/store/slices/toastSlice";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 
@@ -96,8 +96,9 @@ const route = ({ params }: { params: { id: string } }) => {
     } else if (product.stock < newQty) {
       setQuantity(product.stock);
       dispatch(
-        toggleToast({
+        ToastRemoveItem({
           message: `You can only add ${product.stock} items.`,
+          remove: true,
         })
       );
     } else {

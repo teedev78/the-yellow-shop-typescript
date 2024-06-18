@@ -3,19 +3,20 @@
 import React, { useEffect, useState } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleToast } from "@/store/slices/toastSlice";
-import Image from "next/image";
+import { toggleToast, ToastRemoveItem } from "@/store/slices/toastSlice";
 import {
   remove,
   countTotalPrice,
   increaseByQty,
 } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
-import { FaMinus, FaPlus } from "react-icons/fa6";
+
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/utilities/debounce";
+import Image from "next/image";
+import { FaMinus, FaPlus, FaTrashCan } from "react-icons/fa6";
 
 type Cart = {
   product_id: number;
@@ -100,7 +101,12 @@ const Cart = () => {
 
   // ลบสินค้าออกจากตะกร้า
   const removeItem = (id: number) => {
-    dispatch(remove({ id }));
+    dispatch(
+      ToastRemoveItem({
+        message: "Do you want to remove this item?",
+        item_id: id,
+      })
+    );
   };
 
   // เช็คจำนวนสินค้าจากฐานข้อมูลสินค้า
@@ -161,14 +167,21 @@ const Cart = () => {
         </div> */}
 
         {/* Test End */}
-        <h1 className="text-center text-bold text-3xl">Cart</h1>
+        <h1 className="text-center text-bold text-3xl mb-5">Cart</h1>
+        <div className="flex flex-row justify-evenly items-center">
+          <div className="w-6/12 text-left">Product</div>
+          <div className="w-2/12 text-center">Price</div>
+          <div className="w-2/12 text-center">Quantity</div>
+          <div className="w-1/12 text-center">Subtotal</div>
+          <div className="w-1/12 text-center">Remove</div>
+        </div>
         <ul className="">
           {cart.cartItem.map((item: Cart) => (
             <li
               key={item.product_id}
               className="flex flex-row justify-evenly items-center"
             >
-              <div className="border-2 border-blue-300 w-1/12">
+              <div className="w-1/12">
                 <Image
                   src={item.thumbnail}
                   alt={item.title}
@@ -178,16 +191,14 @@ const Cart = () => {
                   className="w-[100px] h-[100px] object-contain"
                 />
               </div>
-              <div className="border-2 border-blue-300 w-5/12">
-                {item.title}
-              </div>
-              <div className="border-2 border-blue-300 w-1/12 line-through">
+              <div className="w-5/12">{item.title}</div>
+              <div className="w-1/12 line-through text-right mr-1">
                 ${item.price}
               </div>
-              <div className="border-2 border-blue-300 w-1/12">
+              <div className="w-1/12 text-left ml-1">
                 ${item.discountedPrice}
               </div>
-              <div className="border-2 border-blue-300 w-2/12">
+              <div className="w-2/12">
                 <div className="flex flex-row justify-center items-center">
                   <FaMinus
                     onClick={() => decreaseItem(item.product_id, item.quantity)}
@@ -207,14 +218,14 @@ const Cart = () => {
                   />
                 </div>
               </div>
-              <div className="border-2 border-blue-300 w-1/12">
+              <div className="w-1/12 text-center">
                 ${(item.discountedPrice * item.quantity).toFixed(2)}
               </div>
-              <div
-                className="border-2 border-blue-300 w-1/12"
-                onClick={() => removeItem(item.product_id)}
-              >
-                Remove
+              <div className="w-1/12 flex justify-center items-center">
+                <FaTrashCan
+                  onClick={() => removeItem(item.product_id)}
+                  className="w-6 h-6 cursor-pointer"
+                />
               </div>
             </li>
           ))}

@@ -1,5 +1,6 @@
-import { connectToDatabase } from "@/lib/db";
-import { ObjectId } from "mongodb";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export async function POST(request: any) {
   try {
@@ -8,36 +9,32 @@ export async function POST(request: any) {
 
     // console.log(userId, newCart);
 
-    const client = await connectToDatabase();
-    const db = client.db();
+    // const query = { _id: new ObjectId(userId as string) };
+    const existingCart = (await prisma.cart.findUnique({
+      where: { userId },
+    })) as any;
 
-    const query = { _id: new ObjectId(userId as string) };
-    const user = await db.collection("User").findOne(query);
-
-    if (!user) {
-      client.close();
-      return Response.json({ status: 422, message: "user not found." });
-    }
-
-    const cart = await db.collection("Cart").findOne(query);
-    if (!cart) {
-      await db.collection("Cart").insertOne({
-        userId: query,
-        cartItem: cartItem,
-        updatedAt: Date.now(),
+    if (existingCart) {
+      await prisma.cart.update({
+        where: { userId },
+        data: {
+          cartItem,
+        },
       });
 
-      client.close();
-      return Response.json({ status: 201, message: "Cart created." });
+      return Response.json({ status: 201, message: "Cart Updated." });
     }
 
-    await db
-      .collection("Cart")
-      .updateOne(query, { $set: { cartItem } });
+    const newCart = await prisma.cart.create({
+      data: {
+        userId,
+        cartItem,
+      },
+    });
 
-    client.close();
-    return Response.json({ status: 201, message: "Cart Updated." });
+    return Response.json({ status: 201, message: "Cart Created." });
   } catch (error) {
+    console.log(error);
     return Response.json({ status: 422, message: "Something went wrong..." });
   }
 }

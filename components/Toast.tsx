@@ -2,10 +2,17 @@ import { RootState } from "@/store/store";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleToast } from "@/store/slices/toastSlice";
+import { remove } from "@/store/slices/cartSlice";
 
 const Toast = () => {
   const toast = useSelector((state: RootState) => state.toast);
   const dispatch = useDispatch();
+
+  const removeItem = () => {
+    dispatch(remove({ id: toast.item_id }));
+    dispatch(toggleToast({ message: "close" }));
+  };
+
   let display = "";
 
   if (toast.toggleToast) {
@@ -16,17 +23,42 @@ const Toast = () => {
 
   return (
     <div
-      className={`${display} fixed m-auto sm:left-0 sm:right-0 sm:w-[500px] sm:h-[300px] bg-white border-2 border-orange-300 sm:p-5 flex flex-col justify-between items-center
-      w-[240px] h-[200px] inset-0 
+      className={`${display} fixed m-auto sm:left-0 sm:right-0 sm:w-[500px] sm:h-[300px] sm:p-5  bg-white border-4 border-blue-400 
+      flex flex-col justify-between items-center w-[240px] h-[200px] inset-0
       `}
     >
-      <p className="h-5/6 flex items-center">{toast.message}</p>
-      <button
-        onClick={() => dispatch(toggleToast({message: "close"}))}
-        className="w-full h-1/6 bg-blue-400 p-2 rounded-sm bottom-0 text-white"
-      >
-        Okay
-      </button>
+      <div className="flex justify-center items-center h-[150px]">
+        {toast.message}
+      </div>
+      {toast.remove ? (
+        <div className="flex flex-row justify-evenly items-evenly w-full">
+          <div className="w-full mr-16">
+            <button
+              onClick={() => removeItem()}
+              className="bg-red-400 border border-red-600 p-3 w-full"
+            >
+              Remove
+            </button>
+          </div>
+          <div className="w-full">
+            <button
+              onClick={() => dispatch(toggleToast({ message: "close" }))}
+              className="bg-white border border-slate-600 p-3 w-full"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full">
+          <button
+            onClick={() => dispatch(toggleToast({ message: "close" }))}
+            className="w-full bg-blue-400 p-2 rounded-sm bottom-0 text-white"
+          >
+            Okay
+          </button>
+        </div>
+      )}
     </div>
   );
 };
