@@ -13,7 +13,7 @@ declare module "next-auth" {
     discountedPrice: number;
     quantity: number;
   };
-  
+
   type Cart = {
     cartItem: CartItem[];
     total_price: number;
@@ -28,7 +28,7 @@ declare module "next-auth" {
       role: string;
       image: string;
       userCart: Cart;
-    };
+    } & DefaultSession["user"];
   }
 
   interface User {

@@ -26,13 +26,17 @@ export const authOptions: NextAuthOptions = {
           password: string;
         };
 
-        const user = (await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
           where: { email },
-        })) as any;
+        });
 
-        if (user && (await compare(password, user.password))) {
+        if (
+          user &&
+          user.password !== null &&
+          (await compare(password, user.password))
+        ) {
           return {
-            id: user._id,
+            id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
@@ -65,7 +69,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    session: async ({ session, token }: { session: any; token: any }) => {
+    session: async ({ session, token }) => {
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;

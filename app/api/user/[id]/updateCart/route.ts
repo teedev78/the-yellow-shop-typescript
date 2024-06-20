@@ -7,7 +7,7 @@ export async function POST(request: any) {
     const data = await request.json();
     const { userId, cartItem } = data;
 
-    // console.log(userId, newCart);
+    console.log(userId, cartItem);
 
     // const query = { _id: new ObjectId(userId as string) };
     const existingCart = (await prisma.cart.findUnique({

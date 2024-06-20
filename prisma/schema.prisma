@@ -17,7 +17,7 @@ model User {
   role          String          @default("member")
   accounts      Account[]
   sessions      Session[]
-  carts         Cart[]
+  cart          Cart[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
 
@@ -85,8 +85,8 @@ model Authenticator {
 
 model Cart {
   id       String @id @default(auto()) @map("_id") @db.ObjectId
-  userId   String @db.ObjectId @unique
-  cartItem Json
+  userId   String @unique @db.ObjectId
+  cartItem Json[]
 
-  User User? @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
