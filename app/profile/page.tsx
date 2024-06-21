@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateCartFromDB } from "@/store/slices/cartSlice";
+import axios from "axios";
 
 export default function Profile() {
   const { data: session, status } = useSession();
@@ -13,11 +14,28 @@ export default function Profile() {
 
   const router = useRouter();
 
+  const fetchUserCart = async () => {
+    if (status === "authenticated" && session.user) {
+      const { id: userId } = session.user;
+      console.log(session.user);
+
+      await axios
+        .post(`/api/user/${userId}/cart`, {
+          userId,
+        })
+        .then((res) => {
+          const updatedCart = res.data.userCart.cartItem;
+          dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          // router.push("/profile");
+        });
+    }
+  };
+
   useEffect(() => {
     if (status === "unauthenticated" || session === null) {
       router.push("/");
     } else {
-      // dispatch(updateCartFromDB(session.user.userCart.cartItem));
+      fetchUserCart();
     }
   }, [status, router]);
 

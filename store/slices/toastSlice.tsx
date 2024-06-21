@@ -20,13 +20,13 @@ const toastSlice = createSlice({
   name: "toast",
   initialState: initialValue,
   reducers: {
-    toggleToast: (state, action) => {
+    showToast: (state, action) => {
       // console.log(action.payload);
       state.message = action.payload.message;
       state.toggleToast = !state.toggleToast;
       state.remove = false;
     },
-    ToastRemoveItem: (state, action) => {
+    showToastRemoveItem: (state, action) => {
       state.message = action.payload.message;
       state.toggleToast = !state.toggleToast;
       state.remove = true;
@@ -36,6 +36,6 @@ const toastSlice = createSlice({
   extraReducers: (builder) => {},
 });
 
-export const { toggleToast, ToastRemoveItem } = toastSlice.actions;
+export const { showToast, showToastRemoveItem } = toastSlice.actions;
 
 export default toastSlice.reducer;

@@ -1,7 +1,7 @@
 import { RootState } from "@/store/store";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleToast } from "@/store/slices/toastSlice";
+import { showToast } from "@/store/slices/toastSlice";
 import { updateCartFromDB } from "@/store/slices/cartSlice";
 import { useSession } from "next-auth/react";
 import axios from "axios";
@@ -11,6 +11,7 @@ const Toast = () => {
   const dispatch = useDispatch();
   const { status, data: session } = useSession();
 
+  //Remove Item in Cart DB
   const removeItem = () => {
     if (status === "authenticated" && session.user) {
       axios
@@ -32,7 +33,7 @@ const Toast = () => {
           console.log("Error : " + error);
         });
     }
-    dispatch(toggleToast({ message: "close" }));
+    dispatch(showToast({ message: "close" }));
   };
 
   let display = "";
@@ -64,7 +65,7 @@ const Toast = () => {
           </div>
           <div className="w-full">
             <button
-              onClick={() => dispatch(toggleToast({ message: "close" }))}
+              onClick={() => dispatch(showToast({ message: "close" }))}
               className="bg-white border border-slate-600 p-3 w-full"
             >
               Cancel
@@ -74,7 +75,7 @@ const Toast = () => {
       ) : (
         <div className="w-full">
           <button
-            onClick={() => dispatch(toggleToast({ message: "close" }))}
+            onClick={() => dispatch(showToast({ message: "close" }))}
             className="w-full bg-blue-400 p-2 rounded-sm bottom-0 text-white"
           >
             Okay

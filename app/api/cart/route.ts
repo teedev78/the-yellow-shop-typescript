@@ -108,7 +108,7 @@ export async function DELETE(request: any) {
       return Response.json({
         status: 201,
         message: "Item removed.",
-        updatedCart,
+        data: updatedCart,
       });
     }
   } catch (error) {

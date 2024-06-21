@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleToast, ToastRemoveItem } from "@/store/slices/toastSlice";
+import { showToast, showToastRemoveItem } from "@/store/slices/toastSlice";
 import { updateCartFromDB, increaseByQty } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
 import axios from "axios";
@@ -98,7 +98,7 @@ const Cart = () => {
   // ลบสินค้าออกจากตะกร้า
   const removeItem = (id: number) => {
     dispatch(
-      ToastRemoveItem({
+      showToastRemoveItem({
         message: "Do you want to remove this item?",
         item_id: id,
       })
@@ -137,7 +137,7 @@ const Cart = () => {
         // console.log("over stock");
         dispatch(increaseByQty({ id: productId, quantity: stock.quantity }));
         dispatch(
-          toggleToast({
+          showToast({
             message: `You can only add ${stock.quantity} items.`,
           })
         );

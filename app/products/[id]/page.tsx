@@ -20,7 +20,7 @@ import type { RootState } from "@/store/store";
 import { useDispatch } from "react-redux";
 import { updateCartFromDB } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
-import { toggleToast, ToastRemoveItem } from "@/store/slices/toastSlice";
+import { showToast, showToastRemoveItem } from "@/store/slices/toastSlice";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 
@@ -103,9 +103,8 @@ const route = ({ params }: { params: { id: string } }) => {
     } else if (product.stock < newQty) {
       setQuantity(product.stock);
       dispatch(
-        ToastRemoveItem({
+        showToast({
           message: `You can only add ${product.stock} items.`,
-          remove: true,
         })
       );
     } else {
@@ -121,7 +120,7 @@ const route = ({ params }: { params: { id: string } }) => {
     } else {
       setQuantity(product.stock);
       dispatch(
-        toggleToast({
+        showToast({
           message: `You can only add ${product.stock} items.`,
         })
       );
@@ -165,7 +164,7 @@ const route = ({ params }: { params: { id: string } }) => {
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
         })
         .catch((error) => {
-          console.log(error);
+          console.log("Error : " + error);
         });
     }
   };
