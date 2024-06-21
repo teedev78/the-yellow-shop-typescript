@@ -45,7 +45,6 @@ const Cart = () => {
           userId,
         })
         .then((res) => {
-          // console.log(res.data.userCart.cartItem);
           const updatedCart = res.data.userCart.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
         });

@@ -150,20 +150,17 @@ const route = ({ params }: { params: { id: string } }) => {
     if (status === "authenticated" && session.user) {
       await axios
         .post("/api/cart", {
-          data: {
-            userId: session.user.id,
-            item: {
-              product_id,
-              thumbnail,
-              title,
-              price,
-              discountPercentage,
-              quantity,
-            },
+          userId: session.user.id,
+          item: {
+            product_id,
+            thumbnail,
+            title,
+            price,
+            discountPercentage,
+            quantity,
           },
         })
         .then((res) => {
-          console.log(res.data.data);
           const updatedCart: CartItem = res.data.data.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
         })

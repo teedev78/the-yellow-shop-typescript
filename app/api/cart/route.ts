@@ -11,11 +11,15 @@ type Cart = {
   quantity: number;
 };
 
+export async function GET() {
+  return Response.json({ status: 200, message: "Get Cart Successful." });
+}
+
 //Add Item to Cart
 export async function POST(request: any) {
   try {
     const data = await request.json();
-    const { userId, item: new_Item } = data.data;
+    const { userId, item: new_Item } = data;
 
     const existingCart = await prisma.cart.findUnique({
       where: { userId },
@@ -50,15 +54,18 @@ export async function POST(request: any) {
         });
       }
     } else {
-      return Response.json({ status: 200, message: "no cart for this user." });
+      await prisma.cart.create({
+        data: {
+          userId,
+          cartItem: [new_Item],
+        },
+      });
     }
 
     //Get Item in updated cart
     const updatedCart = await prisma.cart.findUnique({
       where: { userId },
     });
-
-    console.log(updatedCart);
 
     return Response.json({
       status: 201,
@@ -101,7 +108,7 @@ export async function DELETE(request: any) {
       return Response.json({
         status: 201,
         message: "Item removed.",
-        data: updatedCart,
+        updatedCart,
       });
     }
   } catch (error) {

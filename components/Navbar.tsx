@@ -16,8 +16,7 @@ const Navbar = () => {
   const cartLength = cart.cartItem.length;
 
   const { data: session, status } = useSession();
-  // console.log(session);
-  
+
   const goToHome = () => {
     if (pathname !== "/") {
       router.push("/");
