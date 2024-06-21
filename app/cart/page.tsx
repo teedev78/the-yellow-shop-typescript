@@ -4,13 +4,8 @@ import React, { useEffect, useState } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleToast, ToastRemoveItem } from "@/store/slices/toastSlice";
-import {
-  remove,
-  countTotalPrice,
-  increaseByQty,
-} from "@/store/slices/cartSlice";
+import { updateCartFromDB, increaseByQty } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
-
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -22,7 +17,7 @@ type Cart = {
   product_id: number;
   title: string;
   price: number;
-  discountedPrice: number;
+  discountPercentage: number;
   thumbnail: string;
   quantity: number;
 };
@@ -30,7 +25,7 @@ type Cart = {
 const Cart = () => {
   const dispatch = useDispatch();
   const { data: session, status } = useSession();
-  const router = useRouter();
+  // const router = useRouter();
 
   const cart = useSelector((state: RootState) => state.cart);
   const toast = useSelector((state: RootState) => state.toast);
@@ -38,28 +33,30 @@ const Cart = () => {
   const [newQty, setNewQty] = useState<number>(0);
   const [productId, setProductId] = useState<number>(0);
   const [overStock, setOverStock] = useState<any>({});
-  // const debouncedQty = useDebounce(qty);
+  // // const debouncedQty = useDebounce(qty);
 
-  // ดึงข้อมูลตะกร้าสินค้า
-  // const fetchCart = async () => {
-  //   if (status === "authenticated" && session.user) {
-  //     const data = session.user;
-  //     await axios
-  //       .post(`/api/user/${data.id}/cart`, {
-  //         id: data.id,
-  //       })
-  //       .then((result) => {
-  //         setCart(result.data.userCart.cart);
-  //       });
-  //   } else {
-  //     console.log("not authenticate.");
-  //   }
-  // };
+  // // ดึงข้อมูลตะกร้าสินค้า
+  const fetchCart = async () => {
+    if (status === "authenticated" && session.user) {
+      const { id: userId } = session.user;
 
-  // useEffect(() => {
-  //   fetchCart();
-  //   setLoading(false);
-  // }, [session]);
+      await axios
+        .post(`/api/user/${userId}/cart`, {
+          userId,
+        })
+        .then((res) => {
+          // console.log(res.data.userCart.cartItem);
+          const updatedCart = res.data.userCart.cartItem;
+          dispatch(updateCartFromDB({ cartItem: updatedCart }));
+        });
+    } else {
+      console.log("not authenticate.");
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
   // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
   const handlerQuantity = (
@@ -160,13 +157,6 @@ const Cart = () => {
     <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">
       {toast && <Toast />}
       <section className="sm:w-[480px] md:w-[640px] lg:w-[960px] xl:w-[1100px] m-auto bg-white p-5">
-        {/* Test */}
-
-        {/* <div className="bg-blue-500 p-2 w-fit">
-          <button onClick={handleSummit}>Add</button>
-        </div> */}
-
-        {/* Test End */}
         <h1 className="text-center text-bold text-3xl mb-5">Cart</h1>
         <div className="flex flex-row justify-evenly items-center">
           <div className="w-6/12 text-left">Product</div>
@@ -196,7 +186,11 @@ const Cart = () => {
                 ${item.price}
               </div>
               <div className="w-1/12 text-left ml-1">
-                ${item.discountedPrice}
+                $
+                {(
+                  item.price -
+                  (item.price * item.discountPercentage) / 100
+                ).toFixed(2)}
               </div>
               <div className="w-2/12">
                 <div className="flex flex-row justify-center items-center">
@@ -219,7 +213,11 @@ const Cart = () => {
                 </div>
               </div>
               <div className="w-1/12 text-center">
-                ${(item.discountedPrice * item.quantity).toFixed(2)}
+                $
+                {(
+                  (item.price - (item.price * item.discountPercentage) / 100) *
+                  item.quantity
+                ).toFixed(2)}
               </div>
               <div className="w-1/12 flex justify-center items-center">
                 <FaTrashCan

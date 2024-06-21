@@ -8,7 +8,7 @@ type CartItem = {
   thumbnail: string;
   title: string;
   price: number;
-  discountedPrice: number;
+  discountPercentage: number;
   quantity: number;
 };
 
@@ -28,49 +28,9 @@ const cartSlice = createSlice({
   name: "cart",
   initialState: initialValue,
   reducers: {
-    countTotalPrice: (state) => {
-      let total_price = 0;
-      state.cartItem.forEach((item) => {
-        total_price += item.discountedPrice * item.quantity;
-      });
-      state.total_price = Number(total_price.toFixed(2));
-    },
     updateCartFromDB: (state, action) => {
       const data = action.payload;
-      console.log(data);
       state.cartItem = data.cartItem;
-    },
-    addItem: (state, action) => {
-      // state.value += action.payload;
-      const {
-        product_id,
-        thumbnail,
-        title,
-        price,
-        discountPercentage,
-        quantity,
-      } = action.payload;
-
-      const hasItem = state.cartItem.find(
-        (item) => item.product_id === product_id
-      );
-      if (hasItem === undefined) {
-        state.cartItem.push({
-          product_id: product_id,
-          thumbnail: thumbnail,
-          title: title,
-          price: price,
-          discountedPrice: calTotalPrice(price, discountPercentage),
-          quantity: quantity,
-        });
-      } else {
-        state.cartItem.map((item) => {
-          if (item.product_id === product_id) {
-            const total_qty = (item.quantity += quantity);
-            item.quantity = total_qty;
-          }
-        });
-      }
     },
     increaseByQty: (state, action) => {
       // console.log(action.payload);
@@ -94,16 +54,48 @@ const cartSlice = createSlice({
       const newArray = state.cartItem.filter(removeById);
       state.cartItem = newArray;
     },
+    // Old addItem not use DB
+    // addItem: (state, action) => {
+    //   // state.value += action.payload;
+    //   const {
+    //     product_id,
+    //     thumbnail,
+    //     title,
+    //     price,
+    //     discountPercentage,
+    //     quantity,
+    //   } = action.payload;
+
+    //   const hasItem = state.cartItem.find(
+    //     (item) => item.product_id === product_id
+    //   );
+    //   if (hasItem === undefined) {
+    //     state.cartItem.push({
+    //       product_id: product_id,
+    //       thumbnail: thumbnail,
+    //       title: title,
+    //       price: price,
+    //       discountPercentage: calTotalPrice(price, discountPercentage),
+    //       quantity: quantity,
+    //     });
+    //   } else {
+    //     state.cartItem.map((item) => {
+    //       if (item.product_id === product_id) {
+    //         const total_qty = (item.quantity += quantity);
+    //         item.quantity = total_qty;
+    //       }
+    //     });
+    //   }
+    // },
   },
   extraReducers: (builder) => {},
 });
 
 export const {
-  countTotalPrice,
   updateCartFromDB,
-  addItem,
   increaseByQty,
   remove,
+  // addItem,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

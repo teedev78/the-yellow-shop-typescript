@@ -2,14 +2,36 @@ import { RootState } from "@/store/store";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleToast } from "@/store/slices/toastSlice";
-import { remove } from "@/store/slices/cartSlice";
+import { updateCartFromDB } from "@/store/slices/cartSlice";
+import { useSession } from "next-auth/react";
+import axios from "axios";
 
 const Toast = () => {
   const toast = useSelector((state: RootState) => state.toast);
   const dispatch = useDispatch();
+  const { status, data: session } = useSession();
 
   const removeItem = () => {
-    dispatch(remove({ id: toast.item_id }));
+    if (status === "authenticated" && session.user) {
+      axios
+        .delete("api/cart", {
+          data: {
+            userId: session.user.id,
+            itemId: toast.item_id,
+          },
+        })
+        .then((res) => {
+          const updatedCart = res.data.data.cartItem;
+          dispatch(
+            updateCartFromDB({
+              cartItem: updatedCart,
+            })
+          );
+        })
+        .catch((error) => {
+          console.log("Error : " + error);
+        });
+    }
     dispatch(toggleToast({ message: "close" }));
   };
 

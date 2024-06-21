@@ -18,7 +18,7 @@ import {
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { useDispatch } from "react-redux";
-import { addItem } from "@/store/slices/cartSlice";
+import { updateCartFromDB } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
 import { toggleToast, ToastRemoveItem } from "@/store/slices/toastSlice";
 import { useSession } from "next-auth/react";
@@ -52,11 +52,19 @@ const initialProductValue = {
   images: ["/images/no-image.jpg"],
 };
 
+type CartItem = {
+  product_id: number;
+  thumbnail: string;
+  title: string;
+  price: number;
+  discountedPrice: number;
+  quantity: number;
+};
+
 const route = ({ params }: { params: { id: string } }) => {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
   const toast = useSelector((state: RootState) => state.toast);
-  // const cart = useSelector((state: RootState) => state.cart);
 
   const [product, setProduct] = useState<Product>(initialProductValue);
   const [loading, setLoading] = useState<boolean>(true);
@@ -139,9 +147,9 @@ const route = ({ params }: { params: { id: string } }) => {
     discountPercentage: number,
     quantity: number
   ) => {
-    if (status === "authenticated" && session !== null) {
+    if (status === "authenticated" && session.user) {
       await axios
-        .post("/api/cart/addToCart", {
+        .post("/api/cart", {
           data: {
             userId: session.user.id,
             item: {
@@ -155,24 +163,14 @@ const route = ({ params }: { params: { id: string } }) => {
           },
         })
         .then((res) => {
-          console.log(res.data);
+          console.log(res.data.data);
+          const updatedCart: CartItem = res.data.data.cartItem;
+          dispatch(updateCartFromDB({ cartItem: updatedCart }));
         })
         .catch((error) => {
           console.log(error);
         });
     }
-
-    // Old - Add to Redux
-    // dispatch(
-    //   addItem({
-    //     product_id,
-    //     thumbnail,
-    //     title,
-    //     price,
-    //     discountPercentage,
-    //     quantity,
-    //   })
-    // );
   };
 
   return (

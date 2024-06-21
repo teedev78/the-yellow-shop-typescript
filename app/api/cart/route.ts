@@ -11,6 +11,7 @@ type Cart = {
   quantity: number;
 };
 
+//Add Item to Cart
 export async function POST(request: any) {
   try {
     const data = await request.json();
@@ -52,7 +53,57 @@ export async function POST(request: any) {
       return Response.json({ status: 200, message: "no cart for this user." });
     }
 
-    return Response.json({ status: 201, message: "add item successful." });
+    //Get Item in updated cart
+    const updatedCart = await prisma.cart.findUnique({
+      where: { userId },
+    });
+
+    console.log(updatedCart);
+
+    return Response.json({
+      status: 201,
+      message: "add item successful.",
+      data: updatedCart,
+    });
+  } catch (error) {
+    return Response.json({ status: 400, message: "Error : " + error });
+  }
+}
+
+//Delete Item from Cart
+export async function DELETE(request: any) {
+  try {
+    const data = await request.json();
+    const { userId, itemId } = data;
+
+    const cart = await prisma.cart.findUnique({
+      where: { userId },
+    });
+
+    if (cart) {
+      const userCart = JSON.parse(JSON.stringify(cart.cartItem));
+
+      const removeItem = (item: Cart) => {
+        if (item.product_id !== itemId) {
+          return true;
+        }
+        return false;
+      };
+      const newCart = userCart.filter(removeItem);
+
+      const updatedCart = await prisma.cart.update({
+        where: { userId },
+        data: {
+          cartItem: newCart,
+        },
+      });
+
+      return Response.json({
+        status: 201,
+        message: "Item removed.",
+        data: updatedCart,
+      });
+    }
   } catch (error) {
     return Response.json({ status: 400, message: "Error : " + error });
   }
