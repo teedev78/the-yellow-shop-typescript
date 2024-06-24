@@ -148,7 +148,8 @@ const route = ({ params }: { params: { id: string } }) => {
   ) => {
     if (status === "authenticated" && session.user) {
       await axios
-        .post("/api/cart", {
+        .put("/api/cart", {
+          req_type: "add",
           userId: session.user.id,
           item: {
             product_id,
@@ -162,6 +163,7 @@ const route = ({ params }: { params: { id: string } }) => {
         .then((res) => {
           const updatedCart: CartItem = res.data.data.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          dispatch(showToast({ message: "Add item successful." }));
         })
         .catch((error) => {
           console.log("Error : " + error);

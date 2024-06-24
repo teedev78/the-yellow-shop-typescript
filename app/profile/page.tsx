@@ -17,16 +17,17 @@ export default function Profile() {
   const fetchUserCart = async () => {
     if (status === "authenticated" && session.user) {
       const { id: userId } = session.user;
-      console.log(session.user);
 
       await axios
-        .post(`/api/user/${userId}/cart`, {
+        .post(`/api/cart`, {
           userId,
         })
         .then((res) => {
           const updatedCart = res.data.userCart.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
-          // router.push("/profile");
+        })
+        .catch((error) => {
+          console.log("Error : " + error);
         });
     }
   };

@@ -29,10 +29,11 @@ const Cart = () => {
 
   const cart = useSelector((state: RootState) => state.cart);
   const toast = useSelector((state: RootState) => state.toast);
-  // const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [newQty, setNewQty] = useState<number>(0);
   const [productId, setProductId] = useState<number>(0);
   const [overStock, setOverStock] = useState<any>({});
+  const [disableInput, setDisableInput] = useState<boolean>(false);
   // // const debouncedQty = useDebounce(qty);
 
   // // ดึงข้อมูลตะกร้าสินค้า
@@ -41,12 +42,15 @@ const Cart = () => {
       const { id: userId } = session.user;
 
       await axios
-        .post(`/api/user/${userId}/cart`, {
+        .post(`/api/cart`, {
           userId,
         })
         .then((res) => {
           const updatedCart = res.data.userCart.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
+        })
+        .catch((error) => {
+          console.log("Error : " + error);
         });
     } else {
       console.log("not authenticate.");
@@ -55,44 +59,53 @@ const Cart = () => {
 
   useEffect(() => {
     fetchCart();
-  }, []);
-
-  // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
-  const handlerQuantity = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    id: number
-  ) => {
-    let quantity = Number(e.target.value.replace(/\D/g, ""));
-    if (quantity === 0) {
-      quantity = 1;
-    }
-    dispatch(
-      increaseByQty({
-        id: id,
-        quantity: quantity,
-      })
-    );
-    setNewQty(quantity);
-    setProductId(id);
-  };
+    setLoading(false);
+  }, [session]);
 
   // เพิ่มจำนวนสินค้าจากปุ่มเพิ่มสินค้า
-  const increaseItem = (id: number, quantity: number) => {
-    dispatch(increaseByQty({ id: id, quantity: quantity + 1 }));
-    setNewQty(quantity + 1);
-    setProductId(id);
+  const increaseItem = async (id: number) => {
+    if (status === "authenticated" && session.user) {
+      setDisableInput(true);
+      await axios
+        .put("/api/cart", {
+          req_type: "increase",
+          userId: session.user.id,
+          item: {
+            product_id: id,
+          },
+        })
+        .then((res) => {
+          const updatedCart = res.data.userCart.cartItem;
+          dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          setDisableInput(false);
+        })
+        .catch((error) => {
+          console.log("Error : " + error);
+        });
+    }
   };
 
   // ลดจำนวนสินค้าจากปุ่มลดสินค้า
-  const decreaseItem = (id: number, quantity: number) => {
-    if (quantity <= 1) {
-      quantity = 1;
-      dispatch(increaseByQty({ id, quantity }));
-    } else {
-      dispatch(increaseByQty({ id, quantity: quantity - 1 }));
+  const decreaseItem = async (id: number) => {
+    if (status === "authenticated" && session.user) {
+      setDisableInput(true);
+      await axios
+        .put("/api/cart", {
+          req_type: "decrease",
+          userId: session.user.id,
+          item: {
+            product_id: id,
+          },
+        })
+        .then((res) => {
+          const updatedCart = res.data.userCart.cartItem;
+          dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          setDisableInput(false);
+        })
+        .catch((error) => {
+          console.log("Error : " + error);
+        });
     }
-    setNewQty(quantity - 1);
-    setProductId(id);
   };
 
   // ลบสินค้าออกจากตะกร้า
@@ -103,6 +116,35 @@ const Cart = () => {
         item_id: id,
       })
     );
+  };
+
+  // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
+  const handlerQuantity = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    product_id: number
+  ) => {
+    let quantity = Number(e.target.value.replace(/\D/g, ""));
+    if (quantity === 0) {
+      quantity = 1;
+    }
+
+    if (status === "authenticated" && session.user) {
+      setDisableInput(true);
+      await axios
+        .put("/api/cart", {
+          req_type: "byQTY",
+          userId: session.user.id,
+          item: {
+            product_id,
+            quantity,
+          },
+        })
+        .then((res) => {
+          const updatedCart = res.data.userCart.cartItem;
+          dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          setDisableInput(false);
+        });
+    }
   };
 
   // เช็คจำนวนสินค้าจากฐานข้อมูลสินค้า
@@ -164,69 +206,82 @@ const Cart = () => {
           <div className="w-1/12 text-center">Subtotal</div>
           <div className="w-1/12 text-center">Remove</div>
         </div>
-        <ul className="">
-          {cart.cartItem.map((item: Cart) => (
-            <li
-              key={item.product_id}
-              className="flex flex-row justify-evenly items-center"
-            >
-              <div className="w-1/12">
-                <Image
-                  src={item.thumbnail}
-                  alt={item.title}
-                  width="0"
-                  height="0"
-                  sizes="100vw"
-                  className="w-[100px] h-[100px] object-contain"
-                />
-              </div>
-              <div className="w-5/12">{item.title}</div>
-              <div className="w-1/12 line-through text-right mr-1">
-                ${item.price}
-              </div>
-              <div className="w-1/12 text-left ml-1">
-                $
-                {(
-                  item.price -
-                  (item.price * item.discountPercentage) / 100
-                ).toFixed(2)}
-              </div>
-              <div className="w-2/12">
-                <div className="flex flex-row justify-center items-center">
-                  <FaMinus
-                    onClick={() => decreaseItem(item.product_id, item.quantity)}
-                    className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
-                  />
-                  <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
-                    <input
-                      type="text"
-                      value={item.quantity}
-                      onChange={(e) => handlerQuantity(e, item.product_id)}
-                      className="w-full text-center"
-                    />
-                  </span>
-                  <FaPlus
-                    onClick={() => increaseItem(item.product_id, item.quantity)}
-                    className="border-2 border-gray-500 w-8 h-8 fill-gray-600 p-1"
+        {loading ? (
+          <div>Loading Cart...</div>
+        ) : (
+          <ul className="">
+            {cart.cartItem.map((item: Cart) => (
+              <li
+                key={item.product_id}
+                className="flex flex-row justify-evenly items-center"
+              >
+                <div className="w-1/12">
+                  <Image
+                    src={item.thumbnail}
+                    alt={item.title}
+                    width="0"
+                    height="0"
+                    sizes="100vw"
+                    className="w-[100px] h-[100px] object-contain"
                   />
                 </div>
-              </div>
-              <div className="w-1/12 text-center">
-                $
-                {(
-                  (item.price - (item.price * item.discountPercentage) / 100) *
-                  item.quantity
-                ).toFixed(2)}
-              </div>
-              <div className="w-1/12 flex justify-center items-center">
-                <FaTrashCan
-                  onClick={() => removeItem(item.product_id)}
-                  className="w-6 h-6 cursor-pointer"
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
+                <div className="w-5/12">{item.title}</div>
+                <div className="w-1/12 line-through text-right mr-1">
+                  ${item.price}
+                </div>
+                <div className="w-1/12 text-left ml-1">
+                  $
+                  {(
+                    item.price -
+                    (item.price * item.discountPercentage) / 100
+                  ).toFixed(2)}
+                </div>
+                <div className="w-2/12">
+                  <div className="flex flex-row justify-center items-center">
+                    <button
+                      onClick={() => decreaseItem(item.product_id)}
+                      disabled={disableInput || item.quantity === 1}
+                      className="disabled:opacity-50 w-8 h-8 border-2 border-gray-500 p-1 flex justify-center items-center"
+                    >
+                      <FaMinus className="fill-gray-600" />
+                    </button>
+                    <span className="border-y-2 border-gray-500 w-12 h-8 flex justify-center items-center">
+                      <input
+                        type="text"
+                        value={item.quantity}
+                        onChange={(e) => handlerQuantity(e, item.product_id)}
+                        disabled={disableInput}
+                        className="w-full text-center"
+                      />
+                    </span>
+                    <button
+                      onClick={() => increaseItem(item.product_id)}
+                      disabled={disableInput}
+                      className="disabled:opacity-50 w-8 h-8 border-2 border-gray-500 p-1 flex justify-center items-center"
+                    >
+                      <FaPlus className="fill-gray-600" />
+                    </button>
+                  </div>
+                </div>
+                <div className="w-1/12 text-center">
+                  $
+                  {(
+                    (item.price -
+                      (item.price * item.discountPercentage) / 100) *
+                    item.quantity
+                  ).toFixed(2)}
+                </div>
+                <div className="w-1/12 flex justify-center items-center">
+                  <FaTrashCan
+                    onClick={() => removeItem(item.product_id)}
+                    className="w-6 h-6 cursor-pointer"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
         {/* <div>Total Price : ${cart.total_price}</div> */}
       </section>
     </main>
