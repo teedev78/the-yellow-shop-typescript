@@ -32,7 +32,7 @@ const cartSlice = createSlice({
       const data = action.payload;
       state.cartItem = data.cartItem;
     },
-    increaseByQty: (state, action) => {
+    inputQtyBar: (state, action) => {
       // console.log(action.payload);
       const { id, quantity } = action.payload;
       state.cartItem.map((item) => {
@@ -93,7 +93,7 @@ const cartSlice = createSlice({
 
 export const {
   updateCartFromDB,
-  increaseByQty,
+  inputQtyBar,
   remove,
   // addItem,
 } = cartSlice.actions;

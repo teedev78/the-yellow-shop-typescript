@@ -4,14 +4,13 @@ import React, { useEffect, useState } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { showToast, showToastRemoveItem } from "@/store/slices/toastSlice";
-import { updateCartFromDB, increaseByQty } from "@/store/slices/cartSlice";
+import { updateCartFromDB, inputQtyBar } from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useDebounce } from "@/utilities/debounce";
 import Image from "next/image";
 import { FaMinus, FaPlus, FaTrashCan } from "react-icons/fa6";
+import { useRouter } from "next/navigation";
 
 type Cart = {
   product_id: number;
@@ -23,23 +22,21 @@ type Cart = {
 };
 
 const Cart = () => {
-  const dispatch = useDispatch();
   const { data: session, status } = useSession();
-  // const router = useRouter();
-
+  const router = useRouter();
+  const dispatch = useDispatch();
   const cart = useSelector((state: RootState) => state.cart);
   const toast = useSelector((state: RootState) => state.toast);
+
   const [loading, setLoading] = useState<boolean>(true);
   const [newQty, setNewQty] = useState<number>(0);
   const [productId, setProductId] = useState<number>(0);
-  const [overStock, setOverStock] = useState<any>({});
   const [disableInput, setDisableInput] = useState<boolean>(false);
-  // // const debouncedQty = useDebounce(qty);
 
-  // // ดึงข้อมูลตะกร้าสินค้า
+  // ดึงข้อมูลตะกร้าสินค้า
   const fetchCart = async () => {
-    if (status === "authenticated" && session.user) {
-      const { id: userId } = session.user;
+    if (status === "authenticated" && session.user.id !== undefined) {
+      const { id: userId } = await session.user;
 
       await axios
         .post(`/api/cart`, {
@@ -52,14 +49,17 @@ const Cart = () => {
         .catch((error) => {
           console.log("Error : " + error);
         });
-    } else {
-      console.log("not authenticate.");
     }
   };
 
+  // เช็คการล็อคอินและโหลดตะกร้าสินค้า
   useEffect(() => {
-    fetchCart();
-    setLoading(false);
+    if (status === "unauthenticated" || session === null) {
+      router.push("/sign-in");
+    } else {
+      fetchCart();
+      setLoading(false);
+    }
   }, [session]);
 
   // เพิ่มจำนวนสินค้าจากปุ่มเพิ่มสินค้า
@@ -118,16 +118,42 @@ const Cart = () => {
     );
   };
 
-  // เซ็ตจำนวนสินค้าจากช่องกรอกจำนวนสินค้า
+  // ตัวควบคุมช่องกรอกเลขจำนวนสินค้า
   const handlerQuantity = async (
     e: React.ChangeEvent<HTMLInputElement>,
     product_id: number
   ) => {
-    let quantity = Number(e.target.value.replace(/\D/g, ""));
-    if (quantity === 0) {
-      quantity = 1;
+    let newQuantity = Number(e.target.value.replace(/\D/g, ""));
+    if (newQuantity === 0) {
+      newQuantity = 1;
     }
 
+    dispatch(inputQtyBar({ id: product_id, quantity: newQuantity }));
+    setProductId(product_id);
+    setNewQty(newQuantity);
+  };
+
+  // เช็คจำนวนสินค้าจากฐานข้อมูลสินค้า
+  const checkOverStock = async () => {
+    await axios
+      .get(`https://dummyjson.com/products/${productId}`)
+      .then((res) => {
+        const product = res.data;
+        if (product.stock >= newQty) {
+          //in stock
+          editItemQty(newQty);
+        } else {
+          //over stock. set item qty = stock qty
+          editItemQty(product.stock);
+        }
+      })
+      .catch((error) => {
+        console.log("Error : " + error);
+      });
+  };
+
+  // เก็บค่าจำนวนสินค้าใหม่จากช่องกรอกเลข
+  const editItemQty = async (newQuantity: number) => {
     if (status === "authenticated" && session.user) {
       setDisableInput(true);
       await axios
@@ -135,8 +161,8 @@ const Cart = () => {
           req_type: "byQTY",
           userId: session.user.id,
           item: {
-            product_id,
-            quantity,
+            product_id: productId,
+            quantity: newQuantity,
           },
         })
         .then((res) => {
@@ -147,52 +173,15 @@ const Cart = () => {
     }
   };
 
-  // เช็คจำนวนสินค้าจากฐานข้อมูลสินค้า
-  const checkOverStock = async (product_id: number, newQuantity: number) => {
-    let stock = { valid: false, quantity: 0 };
-
-    try {
-      const res = await axios.get(
-        `https://dummyjson.com/products/${product_id}`
-      );
-      const product = res.data;
-      if (product.stock >= newQuantity && newQuantity > 0) {
-        return (stock = { valid: true, quantity: newQuantity });
-      } else {
-        return (stock = { valid: false, quantity: product.stock });
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // เช็คจำนวนสินค้าในสต็อกและขึ้นแจ้งเตือนเมื่อสินค้าเกินกว่าในสต็อก
+  // ตัวรอกรอกเลขให้เสร็จก่อนไปเช็คจำนวนสินค้า
   useEffect(() => {
     const timer = setTimeout(async () => {
-      // console.log("value changed..");
-      // console.log(productId, newQty);
-      if (productId === 0) return;
-
-      const stock = await checkOverStock(productId, newQty);
-
-      if (stock !== undefined && !stock.valid) {
-        // console.log("over stock");
-        dispatch(increaseByQty({ id: productId, quantity: stock.quantity }));
-        dispatch(
-          showToast({
-            message: `You can only add ${stock.quantity} items.`,
-          })
-        );
-        setNewQty(0);
-        setProductId(0);
-      } else {
-        // console.log("added");
-        setNewQty(0);
-        setProductId(0);
+      if (newQty !== 0) {
+        checkOverStock();
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [cart]);
+  }, [newQty]);
 
   return (
     <main className="bg-gray-100 mt-[50px] sm:mt-0 sm:py-5">

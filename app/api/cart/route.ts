@@ -176,7 +176,6 @@ export async function PUT(request: any) {
     }
   } else if (req_type === "byQTY") {
     try {
-      // console.log(new_Item);
       const existingCart = await prisma.cart.findUnique({
         where: { userId },
       });
