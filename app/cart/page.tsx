@@ -4,7 +4,11 @@ import React, { useEffect, useState } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { showToast, showToastRemoveItem } from "@/store/slices/toastSlice";
-import { updateCartFromDB, inputQtyBar } from "@/store/slices/cartSlice";
+import {
+  updateCartFromDB,
+  inputQtyBar,
+  subtotalCalc,
+} from "@/store/slices/cartSlice";
 import Toast from "@/components/Toast";
 import axios from "axios";
 import { useSession } from "next-auth/react";
@@ -45,6 +49,7 @@ const Cart = () => {
         .then((res) => {
           const updatedCart = res.data.userCart.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          dispatch(subtotalCalc({ updatedCart }));
         })
         .catch((error) => {
           console.log("Error : " + error);
@@ -77,6 +82,7 @@ const Cart = () => {
         .then((res) => {
           const updatedCart = res.data.userCart.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          dispatch(subtotalCalc({ updatedCart }));
           setDisableInput(false);
         })
         .catch((error) => {
@@ -100,6 +106,7 @@ const Cart = () => {
         .then((res) => {
           const updatedCart = res.data.userCart.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          dispatch(subtotalCalc({ updatedCart }));
           setDisableInput(false);
         })
         .catch((error) => {
@@ -168,6 +175,7 @@ const Cart = () => {
         .then((res) => {
           const updatedCart = res.data.userCart.cartItem;
           dispatch(updateCartFromDB({ cartItem: updatedCart }));
+          dispatch(subtotalCalc({ updatedCart }));
           setDisableInput(false);
         });
     }
@@ -211,6 +219,7 @@ const Cart = () => {
                     width="0"
                     height="0"
                     sizes="100vw"
+                    priority
                     className="w-[100px] h-[100px] object-contain"
                   />
                 </div>
@@ -221,8 +230,11 @@ const Cart = () => {
                 <div className="w-1/12 text-left ml-1">
                   $
                   {(
-                    item.price -
-                    (item.price * item.discountPercentage) / 100
+                    Math.round(
+                      (item.price -
+                        (item.price * item.discountPercentage) / 100) *
+                        100
+                    ) / 100
                   ).toFixed(2)}
                 </div>
                 <div className="w-2/12">
@@ -254,11 +266,13 @@ const Cart = () => {
                 </div>
                 <div className="w-1/12 text-center">
                   $
-                  {(
+                  {((Math.round(
                     (item.price -
                       (item.price * item.discountPercentage) / 100) *
-                    item.quantity
-                  ).toFixed(2)}
+                      100
+                  ) /
+                    100) *
+                    item.quantity).toFixed(2)}
                 </div>
                 <div className="w-1/12 flex justify-center items-center">
                   <FaTrashCan
@@ -270,8 +284,20 @@ const Cart = () => {
             ))}
           </ul>
         )}
-
-        {/* <div>Total Price : ${cart.total_price}</div> */}
+        {/* Show Subtotal and item */}
+        <div className="text-right">
+          {cart.item_qty > 1 ? (
+            <div>
+              {"Subtotal (" + cart.item_qty + " items) : "}
+              <span className="font-semibold">${cart.subtotal.toFixed(2)}</span>
+            </div>
+          ) : (
+            <div>
+              {"Subtotal (" + cart.item_qty + " item) : "}
+              <span className="font-semibold">${cart.subtotal.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );

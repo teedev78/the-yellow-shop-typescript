@@ -1,6 +1,5 @@
 "use client";
 
-import { calTotalPrice } from "@/utilities/calTotalPrice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type CartItem = {
@@ -14,14 +13,14 @@ type CartItem = {
 
 type Cart = {
   cartItem: CartItem[];
-  total_price: number;
-  loading: false;
+  subtotal: number;
+  item_qty: number;
 };
 
 const initialValue: Cart = {
   cartItem: [],
-  total_price: 0,
-  loading: false,
+  subtotal: 0,
+  item_qty: 0,
 };
 
 const cartSlice = createSlice({
@@ -33,8 +32,8 @@ const cartSlice = createSlice({
       state.cartItem = data.cartItem;
     },
     inputQtyBar: (state, action) => {
-      // console.log(action.payload);
       const { id, quantity } = action.payload;
+
       state.cartItem.map((item) => {
         if (item.product_id === id) {
           item.quantity = quantity;
@@ -54,39 +53,25 @@ const cartSlice = createSlice({
       const newArray = state.cartItem.filter(removeById);
       state.cartItem = newArray;
     },
-    // Old addItem not use DB
-    // addItem: (state, action) => {
-    //   // state.value += action.payload;
-    //   const {
-    //     product_id,
-    //     thumbnail,
-    //     title,
-    //     price,
-    //     discountPercentage,
-    //     quantity,
-    //   } = action.payload;
+    subtotalCalc: (state, action) => {
+      const { updatedCart: cartItem } = action.payload;
+      let subtotal = 0;
+      let item_qty = 0;
 
-    //   const hasItem = state.cartItem.find(
-    //     (item) => item.product_id === product_id
-    //   );
-    //   if (hasItem === undefined) {
-    //     state.cartItem.push({
-    //       product_id: product_id,
-    //       thumbnail: thumbnail,
-    //       title: title,
-    //       price: price,
-    //       discountPercentage: calTotalPrice(price, discountPercentage),
-    //       quantity: quantity,
-    //     });
-    //   } else {
-    //     state.cartItem.map((item) => {
-    //       if (item.product_id === product_id) {
-    //         const total_qty = (item.quantity += quantity);
-    //         item.quantity = total_qty;
-    //       }
-    //     });
-    //   }
-    // },
+      for (let i = 0; i < cartItem.length; i++) {
+        let discount_price =
+          cartItem[i].price -
+          (cartItem[i].price * cartItem[i].discountPercentage) / 100;
+
+        let discount_price_round = Math.round(discount_price * 100) / 100;
+
+        subtotal += discount_price_round * cartItem[i].quantity;
+        item_qty += cartItem[i].quantity;
+      }
+
+      state.subtotal = subtotal;
+      state.item_qty = item_qty;
+    },
   },
   extraReducers: (builder) => {},
 });
@@ -95,7 +80,7 @@ export const {
   updateCartFromDB,
   inputQtyBar,
   remove,
-  // addItem,
+  subtotalCalc,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

@@ -2,7 +2,7 @@ import { RootState } from "@/store/store";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { showToast } from "@/store/slices/toastSlice";
-import { updateCartFromDB } from "@/store/slices/cartSlice";
+import { updateCartFromDB, subtotalCalc } from "@/store/slices/cartSlice";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 
@@ -28,6 +28,7 @@ const Toast = () => {
               cartItem: updatedCart,
             })
           );
+          dispatch(subtotalCalc({ updatedCart }));
         })
         .catch((error) => {
           console.log("Error : " + error);

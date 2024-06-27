@@ -15,7 +15,7 @@ export default function Profile() {
   const router = useRouter();
 
   const fetchUserCart = async () => {
-    if (status === "authenticated" && session.user) {
+    if (status === "authenticated" && session.user.id !== undefined) {
       const { id: userId } = session.user;
 
       await axios
