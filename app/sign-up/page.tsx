@@ -5,76 +5,138 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { FaGoogle } from "react-icons/fa6";
 
 const SignUp = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [error, setError] = useState("");
+
+  const handleEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (
+      e.target.value.match(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/) ||
+      e.target.value === ""
+    ) {
+      setEmailError("");
+    } else {
+      setEmailError("email adress not valid.");
+    }
+    setEmail(e.target.value);
+  };
+
+  const handleName = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value.length < 3) {
+      setNameError("name should be at least 3 characters long.");
+    } else {
+      setNameError("");
+    }
+    setName(e.target.value);
+  };
+
+  const handlePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value.length < 8) {
+      setPasswordError("password should be at least 8 characters long.");
+    } else {
+      setPasswordError("");
+    }
+    setPassword(e.target.value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await axios
-        .post("/api/auth/signup", {
-          email,
-          name,
-          password,
-        })
-        .then((response) => {
-          router.push("/profile");
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    } catch (error) {
-      console.log("error : ", error);
+
+    if (!email.match(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/)) {
+      setEmailError("email adress not valid.");
+      return;
     }
+    if (name.length < 3) {
+      setNameError("name should be at least 3 characters long.");
+      return;
+    }
+    if (password.length < 8) {
+      setPasswordError("password should be at least 8 characters long.");
+      return;
+    }
+
+    await axios
+      .post("/api/auth/signup", {
+        email,
+        name,
+        password,
+      })
+      .then((res) => {
+        console.log(res);
+        if (res.data.status !== 201) {
+          setError(res.data.message);
+          return;
+        }
+        router.push("/profile");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   return (
     <div className="flex flex-col h-screen items-center justify-center">
-      <div className="bg-white p-6 rounded-md shadow-md border-2 border-gray-100">
+      <div className="bg-white p-6 rounded-md shadow-md border-2 border-gray-100 w-[500px]">
         <h1 className="flex justify-center items-center font-semibold text-2xl mb-2">
           Sign Up
         </h1>
         <form onSubmit={handleSubmit} className="">
-          <div className="mb-4">
+          <div className="mt-4 h-20">
             <label htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmail(e)}
               required
-              className="w-full border border-gray-300 px-3 py-2 rounded"
+              className="w-full h-8 border border-gray-300 px-3 py-2 rounded"
             />
+            {emailError !== "" && (
+              <span className="text-red-600 h-4">{emailError}</span>
+            )}
           </div>
-          <div className="mb-4">
+          <div></div>
+          <div className="mt-2 h-20">
             <label htmlFor="name">Name</label>
             <input
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleName(e)}
               required
-              className="w-full border border-gray-300 px-3 py-2 rounded"
+              pattern="^[A-Za-z]{3,20}$"
+              className="w-full h-8 border border-gray-300 px-3 py-2 rounded"
             />
+            {nameError !== "" && (
+              <span className="text-red-600 h-4">{nameError}</span>
+            )}
           </div>
-          <div className="mb-4">
+          <div className="mt-2 h-20">
             <label htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => handlePassword(e)}
               required
-              className="w-full border border-gray-300 px-3 py-2 rounded"
+              className="w-full h-8 border border-gray-300 px-3 py-2 rounded"
             />
+            {passwordError !== "" && (
+              <span className="text-red-600">{passwordError}</span>
+            )}
           </div>
+          {error !== "" && <div className="text-red-600 mb-1">{error}</div>}
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded mb-4"
+            className="w-full bg-blue-500 text-white py-2 rounded my-4"
           >
             Sign Up
           </button>
@@ -85,14 +147,7 @@ const SignUp = () => {
           onClick={() => signIn("google")}
           className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 rounded mb-5"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 488 512"
-            width="20"
-            height="20"
-          >
-            <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
-          </svg>
+          <FaGoogle />
           Sign up with Google
         </button>
         <div className="flex justify-end items-center">

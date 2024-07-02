@@ -17,12 +17,12 @@ export async function POST(request: any) {
       return Response.json({ status: 422, message: "Invalid Input." });
     }
 
-    const existingUser = (await prisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
-    })) as any;
+    });
 
     if (existingUser) {
-      return Response.json({ status: 422, message: "User exists already!" });
+      return Response.json({ status: 422, message: "Email exists already!" });
     }
 
     const hashedPassword = await hash(password, 10);
@@ -39,6 +39,6 @@ export async function POST(request: any) {
 
     return Response.json({ status: 201, message: "Created user!" });
   } catch (error) {
-    return Response.json({ message: "user could not be created" });
+    return Response.json({ status: 422, message: error });
   }
 }
